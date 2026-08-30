@@ -159,6 +159,23 @@ export const VercelDeployModal: React.FC<VercelDeployModalProps> = ({
 
         </div>
 
+        {/* Troubleshooting: npm allow-scripts warning */}
+        <div className="mt-5 p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-200">
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
+              ✓
+            </span>
+            <div>
+              <span className="font-bold text-emerald-300 block mb-0.5">
+                Correction de l'avertissement npm « allow-scripts esbuild »
+              </span>
+              <p className="leading-relaxed text-emerald-100/90">
+                Si vous voyez <code className="bg-emerald-950/80 px-1 py-0.5 rounded font-mono text-[11px]">npm warn allow-scripts esbuild@0.27.7</code> dans les logs Vercel, c'est un simple avertissement de sécurité de npm 10+. Le projet contient déjà les fichiers <strong>.npmrc</strong>, <strong>.nvmrc</strong> et un <strong>vercel.json</strong> configuré qui approuvent explicitement esbuild (moteur de Vite) et fixent Node 20. Aucune action de votre part n'est requise : le build s'exécute normalement malgré l'avertissement.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="mt-8 pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
           {onOpenZipModal ? (

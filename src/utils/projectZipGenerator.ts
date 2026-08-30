@@ -11,7 +11,7 @@ const srcFiles = meta.glob(
   { query: '?raw', import: 'default', eager: true }
 );
 
-// Additional root files to include
+// Additional root files (dotfiles inclus explicitement pour compatibilité Vercel / npm 10+)
 const gitignoreContent = `# Logs
 logs
 *.log
@@ -29,6 +29,17 @@ dist-ssr
 .DS_Store
 `;
 
+const npmrcContent = `# Autorise explicitement le script postinstall d'esbuild (moteur de Vite)
+# pour éviter le warning npm 10+ "allow-scripts" sur Vercel
+allow-scripts=esbuild
+fund=false
+audit=false
+legacy-peer-deps=false
+`;
+
+const nvmrcContent = `20
+`;
+
 const packageJsonContent = `{
   "name": "horloge-temps-reel-et-centieme",
   "private": true,
@@ -38,6 +49,10 @@ const packageJsonContent = `{
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=18.x",
+    "npm": ">=9.x"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -65,8 +80,10 @@ const packageJsonContent = `{
 export async function downloadProjectZip(onProgress?: (percent: number) => void): Promise<void> {
   const zip = new JSZip();
 
-  // Add gitignore and package.json
+  // Add root config files
   zip.file('.gitignore', gitignoreContent);
+  zip.file('.npmrc', npmrcContent);
+  zip.file('.nvmrc', nvmrcContent);
   zip.file('package.json', packageJsonContent);
 
   // Add globbed files
