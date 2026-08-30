@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ClockSettings, TimeState } from './types/clock';
 import { DualClockDisplay } from './components/DualClockDisplay';
-import { EquivalenceVisualizer } from './components/EquivalenceVisualizer';
+
 import { ConverterTool } from './components/ConverterTool';
+import { CumulCalculator } from './components/CumulCalculator';
 import { PayrollTimesheetCalculator } from './components/PayrollTimesheetCalculator';
 import { DualStopwatch } from './components/DualStopwatch';
 import { EducationalModal } from './components/EducationalModal';
@@ -13,6 +14,7 @@ import {
   Calculator,
   Briefcase,
   Timer,
+  Plus,
   Settings,
   HelpCircle,
   Volume2,
@@ -45,7 +47,7 @@ export function App() {
 
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'clocks' | 'converter' | 'payroll' | 'stopwatch'>('clocks');
+  const [activeTab, setActiveTab] = useState<'clocks' | 'converter' | 'cumul' | 'payroll' | 'stopwatch'>('clocks');
 
   const lastSecondRef = useRef<number>(-1);
 
@@ -122,6 +124,18 @@ export function App() {
             </button>
 
             <button
+              onClick={() => setActiveTab('cumul')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${
+                activeTab === 'cumul'
+                  ? 'bg-sky-500 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Cumul</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('payroll')}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'payroll'
@@ -192,11 +206,6 @@ export function App() {
               onOpenInfo={() => setIsInfoOpen(true)}
             />
 
-            <EquivalenceVisualizer
-              time={time}
-              settings={settings}
-            />
-
             <ConverterTool />
           </>
         ) : (
@@ -233,6 +242,7 @@ export function App() {
             </div>
 
             {activeTab === 'converter' && <ConverterTool />}
+            {activeTab === 'cumul' && <CumulCalculator />}
             {activeTab === 'payroll' && <PayrollTimesheetCalculator />}
             {activeTab === 'stopwatch' && <DualStopwatch />}
           </>
