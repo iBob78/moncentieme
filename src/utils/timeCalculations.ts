@@ -89,41 +89,6 @@ export function formatSexagesimalTime(
 }
 
 /**
- * Generates conversion table for 1 to 60 minutes
- */
-export interface MinuteConversionRow {
-  minute: number;
-  centièmes: number; // float 2 decimals
-  formatted: string;
-  exactFraction: string; // e.g. "1/4", "1/2", "3/4"
-  explanation: string;
-}
-
-export function generateMinuteConversionTable(): MinuteConversionRow[] {
-  const table: MinuteConversionRow[] = [];
-  for (let m = 1; m <= 60; m++) {
-    const cent = (m / 60) * 100;
-    const rounded = Math.round(cent * 100) / 100; // rounded to 2 decimals
-    let exactFraction = '';
-    let explanation = `${m} min ÷ 60 = ${(m / 60).toFixed(4).slice(0, 5)} h`;
-
-    if (m === 15) exactFraction = '¼ h';
-    if (m === 30) exactFraction = '½ h';
-    if (m === 45) exactFraction = '¾ h';
-    if (m === 60) exactFraction = '1 h';
-
-    table.push({
-      minute: m,
-      centièmes: rounded,
-      formatted: rounded.toFixed(2),
-      exactFraction,
-      explanation,
-    });
-  }
-  return table;
-}
-
-/**
  * Calculate duration between two "HH:mm" strings
  */
 export function calculateDuration(startTime: string, endTime: string): {
