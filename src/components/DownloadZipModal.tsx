@@ -87,6 +87,15 @@ git push -u origin main`;
           </div>
         </div>
 
+        {/* npm allowScripts fix notice */}
+        <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-[11px] mb-4 flex items-start gap-2">
+          <Check className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            <strong>Correctif inclus :</strong> esbuild est pré-approuvé dans le champ <code className="px-1 py-0.5 bg-black/50 rounded font-mono">allowScripts</code> du package.json —
+            le warning <em>"npm warn allow-scripts esbuild"</em> de Vercel ne bloquera plus vos builds.
+          </span>
+        </div>
+
         {/* Main Big Download Card */}
         <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/40 border border-cyan-500/30 text-center flex flex-col items-center">
           <div className="p-4 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-3">

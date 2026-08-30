@@ -1,52 +1,90 @@
 # Horloge Temps Réel & Horloge au Centième (Base 60 & Base 100)
 
-Application Web interactive développée avec **React 19**, **Vite 7** et **Tailwind CSS 4**.
-Elle permet de visualiser en temps réel l'heure normale (sexagésimale) et l'heure au centième (industrielle / décimale).
+Application Web interactive développée avec **React**, **Vite** et **Tailwind CSS**.
+Elle permet de visualiser l'heure normale (sexagésimale) et l'heure au centième (industrielle/décimale) en temps réel.
 Exemple : **13h30 ➔ 13,50**.
 
-Deux modes d'affichage :
-- **Option A** : Duo d'horloges synchronisées (classique + centième côte à côte)
-- **Option B** : Horloge centésimale dédiée (accès direct via `?view=option-b`)
+---
+
+## 🚀 Déploiement sur Vercel (100% Compatible)
+
+Vous pouvez déployer ce projet sur **Vercel** de trois manières très simples :
+
+### Méthode 1 : Via GitHub (Recommandé)
+1. Poussez ce projet sur votre compte GitHub / GitLab / Bitbucket.
+2. Rendez-vous sur [vercel.com/new](https://vercel.com/new).
+3. Importez votre dépôt. Vercel détecte automatiquement la configuration **Vite** grâce au fichier `vercel.json` inclus.
+4. Cliquez sur **Deploy**. En 30 secondes, votre site est en ligne avec HTTPS et actualisations automatiques.
+
+### Méthode 2 : En ligne de commande avec Vercel CLI
+Ouvrez votre terminal dans le dossier du projet et lancez :
+```bash
+npx vercel --prod
+```
+Suivez les quelques instructions à l'écran, le déploiement est immédiat.
+
+### Méthode 3 : Glisser-déposer du dossier `dist/`
+1. Générez le dossier de production :
+   ```bash
+   npm run build
+   ```
+2. Rendez-vous sur le tableau de bord Vercel ([vercel.com/deploy](https://vercel.com/deploy)).
+3. Glissez-déposez directement le dossier `dist/` dans l'interface.
 
 ---
 
-## 🚀 Déploiement sur Vercel (en 1 clic)
+## 🧭 Affichage direct de l'Option B sur Vercel
 
-Le projet contient un fichier **`vercel.json`** préconfiguré et un **`.npmrc`** qui autorisent explicitement le script postinstall d'esbuild (moteur de build de Vite) — ce qui évite tout avertissement `npm warn allow-scripts esbuild@0.27.7` avec npm 10+ sur Vercel.
+Le projet intègre :
+- **Option A** : Vue double synchronisée (Horloge classique & Horloge au centième côte à côte).
+- **Option B** : Vue dédiée exclusive **Horloge au Centième seule** (avec grand cadran industriel, format RH / paie et pointage).
 
-### Méthode 1 : Via GitHub (recommandée)
-1. Téléchargez le ZIP depuis le bouton violet « Télécharger ZIP » dans l'application.
-2. Extrayez le dossier et poussez-le sur votre dépôt GitHub.
-3. Rendez-vous sur [vercel.com/new](https://vercel.com/new) et importez le dépôt.
-4. Vercel détecte automatiquement **Vite** et les paramètres de build. Cliquez sur **Deploy**.
-5. En 30 secondes, votre site est en ligne.
+Pour que le site s'ouvre directement sur l'**Option B**, ajoutez simplement le paramètre dans l'URL :
+```
+https://votre-projet.vercel.app/?view=option-b
+```
+Un sélecteur en haut de la page permet également de basculer entre l'Option A et l'Option B en un seul clic !
 
-### Méthode 2 : Vercel CLI
-```bash
-npm install -g vercel
-vercel --prod
+---
+
+## ⚠️ Dépannage : erreur « npm warn allow-scripts esbuild » sur Vercel
+
+Depuis npm 11.16+/12, les scripts d'installation des dépendances sont bloqués par défaut
+(mesure de sécurité contre les attaques via la chaîne d'approvisionnement).
+**Vercel** affiche alors un avertissement (ou un échec de build) du type :
+
+```
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.27.7 (postinstall: node install.js)
 ```
 
-### Méthode 3 : Dossier dist/
+### ✅ Correction déjà appliquée dans ce projet
+
+Le champ `allowScripts` a été ajouté au fichier `package.json` pour approuver **explicitement esbuild** :
+
+```json
+"allowScripts": {
+  "esbuild": true
+}
+```
+
+👉 Il vous suffit donc de **commit & push** à nouveau votre dépôt GitHub :
+```bash
+git add .
+git commit -m "fix: approuver le script d'installation d'esbuild (allowScripts npm)"
+git push
+```
+Puis de relancer le déploiement sur Vercel (« Redeploy ») : le build passera sans erreur.
+
+### 🔧 Si vous voulez gérer l'approbation manuellement (optionnel)
+
+À la racine du projet, en local :
 ```bash
 npm install
-npm run build
+npm approve-scripts --allow-scripts-pending   # liste les scripts en attente
+npm approve-scripts esbuild                   # approuve esbuild (écrit dans package.json)
+git commit -am "chore: allowScripts snapshot"
 ```
-Glissez-déposez ensuite le dossier `dist/` dans [vercel.com/deploy](https://vercel.com/deploy).
 
----
-
-## 🔧 Développement local
-
-```bash
-npm install
-npm run dev
-```
-Ouvrez http://localhost:5173 dans votre navigateur.
-
----
-
-## ⚙️ Configuration Node
-
-Le fichier `.nvmrc` fixe la version **Node 20 LTS** recommandée.
-Le fichier `.npmrc` contient `allow-scripts=esbuild` pour prévenir tout blocage du moteur de build de Vite sur Vercel.
+> 💡 Le champ `allowScripts` est lu automatiquement par npm pendant `npm install` sur Vercel :
+> plus aucune intervention manuelle n'est nécessaire.
