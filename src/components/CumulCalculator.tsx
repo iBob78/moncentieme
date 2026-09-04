@@ -38,8 +38,8 @@ function formatSexagesimalDisplay(value: number): string {
 }
 
 export const CumulCalculator: React.FC = () => {
-  const [entries, setEntries] = useState<CumulEntry[]>([
-    { id: '1', label: 'Début de journée', value: 7.33, valueRaw: '7.33', unit: 'c' },
+ const [entries, setEntries] = useState<CumulEntry[]>([
+    { id: '1', label: 'Début de journée (heure de départ)', value: 7.33, valueRaw: '7.33', unit: 'c' },
   ]);
   const [newLabel, setNewLabel] = useState<string>('');
   const [newValue, setNewValue] = useState<string>('');
@@ -48,7 +48,10 @@ export const CumulCalculator: React.FC = () => {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  const totalCentesimal = entries.reduce((acc, e) => acc + e.value, 0);
+  // La première entrée = heure de départ (base), le reste = durées à ajouter
+  const baseValue = entries.length > 0 ? entries[0].value : 0;
+  const durationsSum = entries.slice(1).reduce((acc, e) => acc + e.value, 0);
+  const totalCentesimal = baseValue + durationsSum;
   const totalSexagesimal = centesimalToSexagesimal(totalCentesimal);
 
   const handleAddEntry = () => {
@@ -150,11 +153,12 @@ export const CumulCalculator: React.FC = () => {
     setDragOverIndex(null);
   };
 
-  // Running totals
+ // Running totals : première ligne = heure de départ, rest = cumul progressif
   const runningTotals: number[] = [];
-  let runningSum = 0;
-  for (const entry of entries) {
-    runningSum += entry.value;
+  let runningSum = entries.length > 0 ? entries[0].value : 0;
+  runningTotals.push(runningSum);
+  for (let i = 1; i < entries.length; i++) {
+    runningSum += entries[i].value;
     runningTotals.push(runningSum);
   }
 
@@ -347,9 +351,9 @@ export const CumulCalculator: React.FC = () => {
 
       {/* Add new entry form */}
       <div className="p-4 rounded-xl bg-slate-950/80 border border-dashed border-slate-700 hover:border-violet-500/40 transition-colors">
-        <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 block mb-3">
-          Ajouter une heure :
-        </span>
+       <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 block mb-3">
+              Ajouter une durée (ou modifier l'heure de départ)
+            </span>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
           {/* Label */}
