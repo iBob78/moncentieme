@@ -33,10 +33,12 @@ export const AnalogClockCentesimal: React.FC<AnalogClockCentesimalProps> = ({
     // Centième hand rotates 360 deg per hour (100 centièmes = 360 deg, so 3.6 deg per centième)
     const cHandAngle = centesimalMinutes * 3.6;
 
-    // Sub-second hand rotates faster (e.g. completes 360 deg every centihour, which is 36 seconds)
-    // 1 centihour = 36 seconds. Sub-dial angle = (seconds % 36) / 36 * 360
-    const secCycle = ((time.seconds + (isSmooth ? time.milliseconds / 1000 : 0)) % 36) / 36;
-    const subSecAngle = secCycle * 360;
+    // Sub-second hand rotates 360 deg every 60 real seconds — perfectly synced
+    // with the sexagesimal seconds hand.
+    // In the centesimal system, 1 minute = 100 centiseconds.
+    // Each centisecond = 0.6 real seconds.
+    const totalSec = time.seconds + (isSmooth ? time.milliseconds / 1000 : 0);
+    const subSecAngle = (totalSec / 60) * 360;
 
     return {
       hourAngle: hourHandAngle,
@@ -226,6 +228,20 @@ export const AnalogClockCentesimal: React.FC<AnalogClockCentesimalProps> = ({
           CENTIÈME: {centesimalMinutes.toFixed(2)}c
         </text>
 
+        {/* Sub-second label: centiseconds within current minute (0-100), perfectly synced with sexagesimal seconds hand */}
+        <text
+          x="150"
+          y="230"
+          textAnchor="middle"
+          fill={theme.secondHand}
+          fontSize="5.5"
+          fontWeight="600"
+          letterSpacing="1"
+          opacity="0.75"
+        >
+          100c/min : {Math.round(((time.seconds + (isSmooth ? time.milliseconds / 1000 : 0)) / 60) * 100)}
+        </text>
+
         {/* 100 Centesimal Ticks */}
         {ticks.map((tick) => (
           <line
@@ -318,7 +334,8 @@ export const AnalogClockCentesimal: React.FC<AnalogClockCentesimalProps> = ({
           <circle cx="150" cy="58" r="2" fill={theme.bezelInner} stroke={theme.centesimalHand} strokeWidth="1" />
         </g>
 
-        {/* SUB-SECOND / TENTH-OF-CENTIÈME HAND */}
+        {/* CENTISECOND HAND — perfectly synced with sexagesimal seconds hand.
+            Completes 1 full rotation every 60 real seconds (0-100 centiseconds per minute). */}
         {settings.showSeconds && (
           <g transform={`rotate(${subSecondAngle} 150 150)`} filter="url(#cHandShadow)">
             <circle cx="150" cy="172" r="3.5" fill={theme.secondHand} />

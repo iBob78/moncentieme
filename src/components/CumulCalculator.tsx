@@ -1,35 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { centesimalToSexagesimal } from '../utils/timeCalculations';
-import { Plus, Trash2, Clock, Cpu, RotateCcw, Copy, Check } from 'lucide-react';
+import { Plus, Trash2, Clock, Cpu, RotateCcw, Copy, Check, GripVertical, ArrowRight } from 'lucide-react';
+
+type EntryUnit = 'c' | 'h';
 
 interface CumulEntry {
   id: string;
   label: string;
   value: number;
   valueRaw: string;
+  unit: EntryUnit;
+}
+
+function parseSexagesimalInput(raw: string): number | null {
+  const cleaned = raw.trim().replace(',', '.');
+
+  // Format "1:30" or "1:30:45"
+  if (cleaned.includes(':')) {
+    const parts = cleaned.split(':').map(Number);
+    if (parts.some(isNaN)) return null;
+    const [h, m, s = 0] = parts;
+    return h + m / 60 + s / 3600;
+  }
+
+  // Format "1.50" or "1,50"
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? null : parsed;
+}
+
+function formatSexagesimalDisplay(value: number): string {
+  const totalSeconds = Math.round(value * 3600);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (s > 0) return `${h}h${String(m).padStart(2, '0')}m${String(s).padStart(2, '0')}s`;
+  return `${h}h${String(m).padStart(2, '0')}m`;
 }
 
 export const CumulCalculator: React.FC = () => {
   const [entries, setEntries] = useState<CumulEntry[]>([
-    { id: '1', label: 'Début de journée', value: 7.33, valueRaw: '7.33' },
+    { id: '1', label: 'Début de journée', value: 7.33, valueRaw: '7.33', unit: 'c' },
   ]);
   const [newLabel, setNewLabel] = useState<string>('');
   const [newValue, setNewValue] = useState<string>('');
+  const [newUnit, setNewUnit] = useState<EntryUnit>('c');
   const [copied, setCopied] = useState<boolean>(false);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Total cumulé
   const totalCentesimal = entries.reduce((acc, e) => acc + e.value, 0);
   const totalSexagesimal = centesimalToSexagesimal(totalCentesimal);
 
   const handleAddEntry = () => {
-    const parsed = parseFloat(newValue.replace(',', '.'));
-    if (isNaN(parsed)) return;
+    let parsedValue: number | null = null;
+
+    if (newUnit === 'c') {
+      parsedValue = parseFloat(newValue.replace(',', '.'));
+      if (isNaN(parsedValue)) return;
+    } else {
+      parsedValue = parseSexagesimalInput(newValue);
+      if (parsedValue === null) return;
+    }
 
     const entry: CumulEntry = {
       id: String(Date.now()),
       label: newLabel.trim() || `Ajout #${entries.length + 1}`,
-      value: parsed,
+      value: parsedValue,
       valueRaw: newValue,
+      unit: newUnit,
     };
 
     setEntries([...entries, entry]);
@@ -49,18 +87,23 @@ export const CumulCalculator: React.FC = () => {
   };
 
   const handleUpdateValue = (id: string, raw: string) => {
-    const parsed = parseFloat(raw.replace(',', '.'));
     setEntries(
       entries.map((e) =>
-        e.id === id
-          ? { ...e, valueRaw: raw, value: isNaN(parsed) ? 0 : parsed }
-          : e
+        e.id === id ? { ...e, valueRaw: raw } : e
       )
     );
   };
 
   const handleUpdateLabel = (id: string, label: string) => {
     setEntries(entries.map((e) => (e.id === id ? { ...e, label } : e)));
+  };
+
+  const handleUpdateUnit = (id: string, unit: EntryUnit) => {
+    setEntries(
+      entries.map((e) =>
+        e.id === id ? { ...e, unit, valueRaw: '' } : e
+      )
+    );
   };
 
   const handleReset = () => {
@@ -76,13 +119,56 @@ export const CumulCalculator: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Sous-totaux partiels pour afficher le cumul progressif
+  // Drag and drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggingIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = useCallback((dropIndex: number) => {
+    if (draggingIndex === null || draggingIndex === dropIndex) {
+      setDraggingIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newEntries = [...entries];
+    const [draggedEntry] = newEntries.splice(draggingIndex, 1);
+    newEntries.splice(dropIndex, 0, draggedEntry);
+
+    setEntries(newEntries);
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+  }, [draggingIndex, entries]);
+
+  const handleDragEnd = () => {
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+  };
+
+  // Running totals
   const runningTotals: number[] = [];
   let runningSum = 0;
   for (const entry of entries) {
     runningSum += entry.value;
     runningTotals.push(runningSum);
   }
+
+  // Preview of what the new entry would equal
+  const previewValue = (() => {
+    if (!newValue) return null;
+    if (newUnit === 'c') {
+      const parsed = parseFloat(newValue.replace(',', '.'));
+      if (isNaN(parsed)) return null;
+      return parsed;
+    } else {
+      return parseSexagesimalInput(newValue);
+    }
+  })();
 
   return (
     <div className="w-full max-w-4xl mx-auto my-8 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
@@ -97,7 +183,7 @@ export const CumulCalculator: React.FC = () => {
               Cumul de la journée
             </h2>
             <p className="text-xs text-slate-400">
-              Additionnez vos heures en centièmes au fur et à mesure — total converti en temps classique
+              Additionnez vos heures en centièmes ou en heures sexagésimales — total converti automatiquement
             </p>
           </div>
         </div>
@@ -112,87 +198,140 @@ export const CumulCalculator: React.FC = () => {
         </button>
       </div>
 
+      {/* Unit legend */}
+      <div className="flex flex-wrap items-center gap-3 mb-4 text-[11px]">
+        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-semibold">
+          <Cpu className="w-3 h-3" />
+          <span>Centièmes : 1h = 100c (ex: 7.33 = 7h33c)</span>
+        </span>
+        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-300 font-semibold">
+          <Clock className="w-3 h-3" />
+          <span>Heures : 1h = 60min (ex: 1:30 = 1h30m)</span>
+        </span>
+        <span className="text-slate-500 hidden sm:inline">• Glissez les blocs pour réordonner</span>
+      </div>
+
       {/* Entries list */}
       {entries.length > 0 && (
         <div className="space-y-2.5 mb-6">
           {entries.map((entry, idx) => {
-            const sex = centesimalToSexagesimal(entry.value);
             const cumul = runningTotals[idx];
             const cumulSex = centesimalToSexagesimal(cumul);
+            const isDragging = draggingIndex === idx;
+            const isDragOver = dragOverIndex === idx && draggingIndex !== idx;
 
             return (
               <div
                 key={entry.id}
-                className="group p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-slate-700 transition-colors"
+                draggable
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDrop={() => handleDrop(idx)}
+                onDragEnd={handleDragEnd}
+                className={`group p-3.5 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${
+                  isDragging
+                    ? 'bg-slate-900/90 border-violet-500/50 shadow-lg shadow-violet-500/10 opacity-60'
+                    : isDragOver
+                    ? 'bg-slate-900/90 border-violet-400 border-dashed shadow-lg shadow-violet-400/10'
+                    : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700'
+                }`}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  {/* Left: label + value */}
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {/* Row number */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  {/* Drag handle + Row number */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-col items-center gap-0.5 text-slate-500 group-hover:text-slate-300 transition-colors">
+                      <GripVertical className="w-4 h-4" />
+                    </div>
                     <span className="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
+                  </div>
 
-                    {/* Label input */}
+                  {/* Label input */}
+                  <div className="flex-1 min-w-0">
                     <input
                       type="text"
                       value={entry.label}
                       onChange={(e) => handleUpdateLabel(entry.id, e.target.value)}
-                      className="flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-slate-700 focus:border-sky-500 text-sm text-slate-200 font-medium focus:outline-none py-0.5 transition-colors"
+                      className="w-full bg-transparent border-b border-transparent hover:border-slate-700 focus:border-violet-500 text-sm text-slate-200 font-medium focus:outline-none py-0.5 transition-colors"
                       placeholder="Libellé..."
                     />
                   </div>
 
-                  {/* Center: value + conversion */}
-                  <div className="flex items-center gap-4">
-                    {/* Centesimal value (editable) */}
-                    <div className="flex items-center gap-1">
-                      <Cpu className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
-                      <input
-                        type="text"
-                        value={entry.valueRaw}
-                        onChange={(e) => handleUpdateValue(entry.id, e.target.value)}
-                        className="w-20 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-sm font-mono font-bold text-cyan-300 text-right focus:outline-none focus:border-cyan-500"
-                      />
-                      <span className="text-xs text-cyan-500 font-mono font-bold">h</span>
-                    </div>
-
-                    {/* Arrow */}
-                    <span className="text-slate-600 text-xs">=</span>
-
-                    {/* Sexagesimal equivalent */}
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-                      <span className="text-sm font-mono font-semibold text-white whitespace-nowrap">
-                        {sex.hours}h{String(sex.minutes).padStart(2, '0')}
-                        {sex.seconds > 0 && (
-                          <span className="text-slate-400 text-xs">:{String(sex.seconds).padStart(2, '0')}</span>
-                        )}
-                      </span>
-                    </div>
-
-                    {/* Running total badge */}
-                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-[11px] font-mono text-violet-300 whitespace-nowrap">
-                      Σ {cumul.toFixed(2)}h
-                      <span className="text-violet-500">
-                        ({cumulSex.hours}h{String(cumulSex.minutes).padStart(2, '0')})
-                      </span>
-                    </span>
-
-                    {/* Delete button */}
+                  {/* Unit toggle */}
+                  <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0">
                     <button
-                      onClick={() => handleRemoveEntry(entry.id)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
-                      title="Supprimer cette ligne"
+                      onClick={() => handleUpdateUnit(entry.id, 'c')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
+                        entry.unit === 'c'
+                          ? 'bg-cyan-500 text-slate-950'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Mode centièmes (1h = 100c)"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      c
+                    </button>
+                    <button
+                      onClick={() => handleUpdateUnit(entry.id, 'h')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
+                        entry.unit === 'h'
+                          ? 'bg-sky-500 text-white'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Mode heures sexagésimales (1h = 60min)"
+                    >
+                      h
                     </button>
                   </div>
+
+                  {/* Value input */}
+                  <div className="relative shrink-0">
+                    <input
+                      type="text"
+                      value={entry.valueRaw}
+                      onChange={(e) => handleUpdateValue(entry.id, e.target.value)}
+                      className={`w-24 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-sm font-mono font-bold text-right focus:outline-none focus:border-cyan-500 ${
+                        entry.unit === 'c' ? 'text-cyan-300' : 'text-sky-300'
+                      }`}
+                      placeholder={entry.unit === 'c' ? '7.33' : '1:30'}
+                    />
+                    <span className={`absolute right-2.5 top-1.5 text-[10px] font-mono font-bold ${
+                      entry.unit === 'c' ? 'text-cyan-500' : 'text-sky-500'
+                    }`}>
+                      {entry.unit === 'c' ? 'c' : 'h'}
+                    </span>
+                  </div>
+
+                  {/* Sexagesimal equivalent */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                    <span className="text-sm font-mono font-semibold text-white whitespace-nowrap">
+                      {formatSexagesimalDisplay(entry.value)}
+                    </span>
+                  </div>
+
+                  {/* Running total badge */}
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-[11px] font-mono text-violet-300 whitespace-nowrap shrink-0">
+                    Σ {cumul.toFixed(2)}h
+                    <span className="text-violet-500">
+                      ({cumulSex.hours}h{String(cumulSex.minutes).padStart(2, '0')})
+                    </span>
+                  </span>
+
+                  {/* Delete button */}
+                  <button
+                    onClick={() => handleRemoveEntry(entry.id)}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                    title="Supprimer cette ligne"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
-                {/* Mobile running total */}
-                <div className="sm:hidden mt-2 text-[11px] font-mono text-violet-300">
-                  Cumul : {cumul.toFixed(2)}h centésimal = {cumulSex.hours}h{String(cumulSex.minutes).padStart(2, '0')}
+                {/* Mobile running total + drag hint */}
+                <div className="sm:hidden mt-2 flex items-center justify-between text-[11px] font-mono text-violet-300">
+                  <span>Cumul : {cumul.toFixed(2)}h ({cumulSex.hours}h{String(cumulSex.minutes).padStart(2, '0')})</span>
+                  <span className="text-slate-500 text-[10px]">Glissez pour réordonner</span>
                 </div>
               </div>
             );
@@ -202,14 +341,14 @@ export const CumulCalculator: React.FC = () => {
 
       {entries.length === 0 && (
         <div className="text-center py-10 text-slate-500 text-sm">
-          Aucune entrée. Ajoutez votre première heure en centièmes ci-dessous.
+          Aucune entrée. Ajoutez votre première heure ci-dessous.
         </div>
       )}
 
       {/* Add new entry form */}
-      <div className="p-4 rounded-xl bg-slate-950/80 border border-dashed border-slate-700 hover:border-cyan-500/40 transition-colors">
+      <div className="p-4 rounded-xl bg-slate-950/80 border border-dashed border-slate-700 hover:border-violet-500/40 transition-colors">
         <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 block mb-3">
-          Ajouter une heure en centièmes :
+          Ajouter une heure :
         </span>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
@@ -224,14 +363,42 @@ export const CumulCalculator: React.FC = () => {
               onChange={(e) => setNewLabel(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ex: Matin, Pause, Réunion..."
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-violet-500"
             />
+          </div>
+
+          {/* Unit toggle */}
+          <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+            <button
+              onClick={() => setNewUnit('c')}
+              className={`px-3 py-2 rounded-md text-xs font-bold transition-all ${
+                newUnit === 'c'
+                  ? 'bg-cyan-500 text-slate-950'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Centièmes (1h = 100c)"
+            >
+              <Cpu className="w-3.5 h-3.5 inline mr-1" />
+              Centièmes
+            </button>
+            <button
+              onClick={() => setNewUnit('h')}
+              className={`px-3 py-2 rounded-md text-xs font-bold transition-all ${
+                newUnit === 'h'
+                  ? 'bg-sky-500 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Heures sexagésimales (1h = 60min)"
+            >
+              <Clock className="w-3.5 h-3.5 inline mr-1" />
+              Heures
+            </button>
           </div>
 
           {/* Value */}
           <div className="w-full sm:w-36">
             <label className="text-[10px] text-slate-500 uppercase font-semibold block mb-1">
-              Heures en centièmes
+              {newUnit === 'c' ? 'Valeur centièmes' : 'Heures (sexagésimales)'}
             </label>
             <div className="relative">
               <input
@@ -239,20 +406,27 @@ export const CumulCalculator: React.FC = () => {
                 value={newValue}
                 onChange={(e) => setNewValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ex: 7.33"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm font-mono font-bold text-cyan-300 focus:outline-none focus:border-cyan-500 pr-8"
+                placeholder={newUnit === 'c' ? '7.33' : '1:30'}
+                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm font-mono font-bold text-white focus:outline-none focus:border-violet-500 pr-8"
               />
-              <span className="absolute right-2.5 top-2 text-xs text-slate-500 font-mono">h</span>
+              <span className={`absolute right-2.5 top-2 text-xs font-mono font-bold ${
+                newUnit === 'c' ? 'text-cyan-500' : 'text-sky-500'
+              }`}>
+                {newUnit === 'c' ? 'c' : 'h'}
+              </span>
             </div>
           </div>
 
-          {/* Preview of what it equals */}
-          {newValue && !isNaN(parseFloat(newValue.replace(',', '.'))) && (
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-sky-500/10 border border-sky-500/20 text-xs text-sky-300 self-end whitespace-nowrap">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="font-mono font-semibold">
-                = {centesimalToSexagesimal(parseFloat(newValue.replace(',', '.'))).hours}h
-                {String(centesimalToSexagesimal(parseFloat(newValue.replace(',', '.'))).minutes).padStart(2, '0')}
+          {/* Preview */}
+          {previewValue !== null && (
+            <div className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border whitespace-nowrap self-end ${
+              newUnit === 'c'
+                ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-300'
+                : 'bg-sky-500/10 border-sky-500/20 text-sky-300'
+            }`}>
+              <ArrowRight className="w-3.5 h-3.5" />
+              <span className="font-mono font-semibold text-xs">
+                = {formatSexagesimalDisplay(previewValue)}
               </span>
             </div>
           )}
@@ -260,8 +434,8 @@ export const CumulCalculator: React.FC = () => {
           {/* Add button */}
           <button
             onClick={handleAddEntry}
-            disabled={!newValue || isNaN(parseFloat(newValue.replace(',', '.')))}
-            className="flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md transition-all self-end"
+            disabled={!newValue}
+            className="flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md transition-all self-end"
           >
             <Plus className="w-4 h-4" />
             <span>Ajouter</span>
@@ -296,7 +470,7 @@ export const CumulCalculator: React.FC = () => {
               </div>
             </div>
 
-            {/* Total sexagésimal */}
+            {/* Total sexagesimal */}
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-sky-500/20 text-sky-400">
                 <Clock className="w-5 h-5" />

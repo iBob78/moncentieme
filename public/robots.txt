@@ -1,0 +1,6 @@
+# Mon centième — politique d'exploration transparente
+User-agent: *
+Allow: /
+
+# Aucun contenu masqué, aucun piège à crawler :
+# le site est une application monopage sans zone privée.

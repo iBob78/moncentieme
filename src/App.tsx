@@ -8,6 +8,7 @@ import { PayrollTimesheetCalculator } from './components/PayrollTimesheetCalcula
 import { DualStopwatch } from './components/DualStopwatch';
 import { EducationalModal } from './components/EducationalModal';
 import { SettingsModal } from './components/SettingsModal';
+import { LegalModal, LegalTab } from './components/LegalModal';
 import { clockAudio } from './utils/audioTick';
 import {
   Clock,
@@ -17,6 +18,10 @@ import {
   Plus,
   Settings,
   HelpCircle,
+  Scale,
+  ShieldCheck,
+  Lock,
+  EyeOff,
   Volume2,
   VolumeX,
   Radio,
@@ -47,6 +52,13 @@ export function App() {
 
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [legalTab, setLegalTab] = useState<LegalTab>('mentions');
+  const [isLegalOpen, setIsLegalOpen] = useState<boolean>(false);
+
+  const openLegal = (t: LegalTab) => {
+    setLegalTab(t);
+    setIsLegalOpen(true);
+  };
   const [activeTab, setActiveTab] = useState<'clocks' | 'converter' | 'cumul' | 'payroll' | 'stopwatch'>('clocks');
 
   const lastSecondRef = useRef<number>(-1);
@@ -167,6 +179,16 @@ export function App() {
             </span>
 
             <button
+              onClick={() => openLegal('mentions')}
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-emerald-300 border border-slate-800 transition-colors"
+              title="Mentions légales, confidentialité & confiance"
+              aria-label="Mentions légales, confidentialité et confiance"
+            >
+              <Scale className="w-4 h-4" />
+              <span className="hidden lg:inline text-xs font-semibold">Mentions légales</span>
+            </button>
+
+            <button
               onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
               className={`p-2 rounded-xl border transition-colors ${
                 settings.soundEnabled
@@ -174,6 +196,7 @@ export function App() {
                   : 'bg-slate-900 text-slate-400 hover:text-white border-slate-800'
               }`}
               title={settings.soundEnabled ? 'Désactiver le tic-tac audio' : 'Activer le tic-tac audio'}
+              aria-label={settings.soundEnabled ? 'Désactiver le tic-tac audio' : 'Activer le tic-tac audio'}
             >
               {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
@@ -182,6 +205,7 @@ export function App() {
               onClick={() => setIsInfoOpen(true)}
               className="p-2 rounded-xl bg-slate-900 text-slate-400 hover:text-cyan-300 border border-slate-800 transition-colors"
               title="Comprendre l'heure centésimale"
+              aria-label="Comprendre l'heure centésimale"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
@@ -190,6 +214,7 @@ export function App() {
               onClick={() => setIsSettingsOpen(true)}
               className="p-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition-colors"
               title="Paramètres d'affichage"
+              aria-label="Paramètres d'affichage"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -250,30 +275,81 @@ export function App() {
       </main>
 
       <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950/90 py-8 px-4 text-xs text-slate-400 mt-12">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="font-bold text-slate-200">
-              Horloge Temps Réel & Centième
-            </p>
-            <p className="text-slate-500 mt-0.5">
-              Affichage jumelé : heure classique (base 60) et heure industrielle (base 100).
-            </p>
+        <div className="max-w-6xl mx-auto space-y-5">
+          {/* Trust badges */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Sans cookie ni traceur
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-semibold">
+              <Lock className="w-3.5 h-3.5" />
+              Calculs 100% locaux
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-semibold">
+              <EyeOff className="w-3.5 h-3.5" />
+              Aucune donnée collectée
+            </span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsInfoOpen(true)}
-              className="text-sky-400 hover:underline"
-            >
-              Guide 13h30 = 13.50
-            </button>
-            <span className="text-slate-700">•</span>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="text-slate-400 hover:text-white"
-            >
-              Styles
-            </button>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <p className="font-bold text-slate-200">Mon centième</p>
+              <p className="text-slate-500 mt-0.5">
+                Affichage jumelé : heure classique (base 60) et heure industrielle (base 100).
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <button
+                onClick={() => setIsInfoOpen(true)}
+                className="text-sky-400 hover:underline"
+              >
+                Guide 13h30 = 13.50
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-slate-400 hover:text-white"
+              >
+                Styles
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => openLegal('mentions')}
+                className="text-slate-400 hover:text-white"
+              >
+                Mentions légales
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => openLegal('confidentialite')}
+                className="text-slate-400 hover:text-white"
+              >
+                Confidentialité
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => openLegal('cgu')}
+                className="text-slate-400 hover:text-white"
+              >
+                CGU
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => openLegal('cookies')}
+                className="text-slate-400 hover:text-white"
+              >
+                Cookies
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => openLegal('confiance')}
+                className="text-emerald-400 hover:text-emerald-300"
+              >
+                Confiance & sécurité
+              </button>
+            </div>
           </div>
         </div>
       </footer>
@@ -288,6 +364,12 @@ export function App() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdateSettings={updateSettings}
+      />
+
+      <LegalModal
+        isOpen={isLegalOpen}
+        onClose={() => setIsLegalOpen(false)}
+        initialTab={legalTab}
       />
     </div>
   );
