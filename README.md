@@ -76,6 +76,10 @@ Pas de compte, cookie, traceur, publicité ou stockage persistant dans le code a
 
 Importer le dépôt, choisir Vite, commande npm run build, sortie dist. Vérifier la compilation, la prévisualisation, les cinq onglets et les en-têtes HTTP en production. Aucun secret ni variable d'environnement requis par le code actuel.
 
+## Historique et état des validations
+
+Consulter [CHANGELOG.md](CHANGELOG.md) pour les changements, les preuves de validation et les points restant à traiter. Le premier contrôle GitHub Actions du 25 novembre 2026 a réussi sur le commit `08a0fb3` ([rapport](https://github.com/iBob78/moncentieme/actions/runs/45576478244)). Les résultats des commits ultérieurs sont à vérifier dans Actions.
+
 ## Contribution
 
 Lire [AGENTS.md](AGENTS.md), travailler sur une branche dédiée, lancer les tests et proposer une pull request. Ne pas changer les règles de calcul sans régression. Aucune licence explicite n'est déclarée ; la visibilité publique n'accorde pas à elle seule un droit de redistribution.

@@ -39,6 +39,7 @@ import file34 from "../../tsconfig.json?raw";
 import file35 from "../../vercel.json?raw";
 import file36 from "../../vite.config.ts?raw";
 import file37 from "../../.github/workflows/ci.yml?raw";
+import file38 from "../../CHANGELOG.md?raw";
 
 const sources: Record<string, string> = {
   ".gitignore": file0,
@@ -79,6 +80,7 @@ const sources: Record<string, string> = {
   "vercel.json": file35,
   "vite.config.ts": file36,
   ".github/workflows/ci.yml": file37,
+  "CHANGELOG.md": file38,
 };
 
 export async function downloadProjectZip(onProgress?: (percent: number) => void): Promise<void> {

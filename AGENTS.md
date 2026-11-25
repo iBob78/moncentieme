@@ -1,7 +1,7 @@
 # AGENTS.md — Mon centième
 
 ## Mission
-Application française, gratuite, statique : heures décimales, pointage et chronomètre. Préserver exactitude, simplicité et confidentialité. Ces règles couvrent tout le dépôt. Lire le README avant toute intervention.
+Application française, gratuite, statique : heures décimales, pointage et chronomètre. Préserver exactitude, simplicité et confidentialité. Ces règles couvrent tout le dépôt. Lire le README et CHANGELOG.md avant toute intervention.
 
 ## Architecture
 - React 19, TypeScript strict, Vite 7, Tailwind CSS 4. Vercel statique, sortie dist/.
@@ -25,7 +25,7 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 1. Node 22.18+ recommandé ; npm ci.
 2. npm test (ajouter une régression à chaque modification métier), npm run typecheck, npm run build.
 3. Vérifier les cinq onglets, conservation des saisies, pauses, minuit, copies et chronomètre en navigation.
-4. Actualiser README et le manifeste statique de l'export ZIP à chaque ajout, renommage ou suppression de fichier ; conserver les imports ?raw explicites. Ne jamais annoncer un test réussi sans l'avoir exécuté.
+4. Actualiser CHANGELOG.md pour toute évolution significative, README et le manifeste statique de l'export ZIP à chaque ajout, renommage ou suppression de fichier ; conserver les imports ?raw explicites. Ne jamais annoncer un test réussi sans l'avoir exécuté.
 
 ## Intégration continue
 Le workflow .github/workflows/ci.yml exécute npm ci, npm test, npm run typecheck et npm run build sous Node 22. Vérifier les résultats dans la pull request ; ne pas contourner ni désactiver les contrôles pour masquer un échec. La CI ne remplace pas les tests visuels. Garder les permissions minimales (contents: read), sans secret ni déploiement dans ce workflow.
