@@ -25,7 +25,7 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 1. Node 22.18+ recommandé ; npm ci.
 2. npm test (ajouter une régression à chaque modification métier), npm run typecheck, npm run build.
 3. Vérifier les cinq onglets, conservation des saisies, pauses, minuit, copies et chronomètre en navigation.
-4. Actualiser README et export ZIP si nécessaire. Ne jamais annoncer un test réussi sans l'avoir exécuté.
+4. Actualiser README et le manifeste statique de l'export ZIP à chaque ajout, renommage ou suppression de fichier ; conserver les imports ?raw explicites. Ne jamais annoncer un test réussi sans l'avoir exécuté.
 
 ## Git
 Branche dédiée, commits explicites et pull request vers main. Ne pas fusionner ni déployer sans accord. Indiquer les tests réellement effectués et les limites. Aucun secret ou donnée personnelle dans Git.

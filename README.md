@@ -59,7 +59,7 @@ Ouvrir l'adresse indiquée par Vite.
     vercel.json                  Hébergement
     AGENTS.md                    Instructions de contribution
 
-Modules historiques conservés, non exposés dans la navigation actuelle : ConversionTable, EquivalenceVisualizer, OptionBCentesimalOnly, TimeTravelController, DownloadZipModal et VercelDeployModal. Le générateur ZIP est également conservé ; le téléchargement du dépôt GitHub reste la méthode de référence.
+Modules historiques conservés, non exposés dans la navigation actuelle : ConversionTable, EquivalenceVisualizer, OptionBCentesimalOnly, TimeTravelController, DownloadZipModal et VercelDeployModal. Le générateur ZIP utilise un manifeste statique de fichiers source (y compris documentation, lockfile, tests et robots.txt) ; maintenir cette liste à chaque ajout ou suppression de fichier. Le générateur est conservé ; le téléchargement du dépôt GitHub reste la méthode de référence.
 
 ## Confidentialité
 
