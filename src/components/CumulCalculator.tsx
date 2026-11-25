@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { centesimalToSexagesimal, parseTimeOfDay, parseDurationInput, calculateNetHours, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd, reorderEntries } from '../utils/timeCalculations';
+import { centesimalToSexagesimal, parseTimeOfDay, parseDurationInput, calculateNetHours, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, reorderEntries, formatCumulDecimal, scheduleCumulEntries, normalizeCumulStart, calculateCumulPauseDeduction, type CumulSlot, type CumulScheduleInput } from '../utils/timeCalculations';
 import { Plus, Trash2, Clock, Cpu, RotateCcw, Copy, Check, GripVertical, ArrowRight, Flag, Timer, Coffee } from 'lucide-react';
 
 type EntryUnit = 'c' | 'h';
@@ -15,16 +15,30 @@ interface CumulEntry {
   startUnit: EntryUnit;
 }
 
-function EntrySchedule({ id, raw, unit, duration, onChange }: {
+function formatSlotTime(seconds: number, unit: EntryUnit): string {
+  const day = Math.floor(seconds / 86400);
+  const local = seconds % 86400;
+  const value = unit === 'h' ? formatCumulStartTime(local, 'h') : formatCumulDecimal(local / 3600);
+  return value + (day > 0 ? ' J+' + day : '');
+}
+
+function SlotSummary({ slots }: { slots: CumulSlot[] }) {
+  return <>{slots.map((slot, i) => <span key={i} className="block">
+    <span>{formatSlotTime(slot.start, 'h')} → {formatSlotTime(slot.end, 'h')}</span>
+    <span className="text-cyan-300"> · {formatSlotTime(slot.start, 'c')} → {formatSlotTime(slot.end, 'c')}</span>
+  </span>)}</>;
+}
+
+function EntrySchedule({ id, raw, unit, slots, onChange }: {
   id: string;
   raw: string;
   unit: EntryUnit;
-  duration: number | null;
+  slots: CumulSlot[];
   onChange: (raw: string, unit: EntryUnit) => void;
 }) {
   const start = parseCumulStartTime(raw, unit);
   const invalid = raw.trim() !== '' && start === null;
-  const end = start !== null && duration !== null ? calculateEntryEnd(start, duration) : null;
+  const end = slots.length ? slots[slots.length - 1].end : null;
   const changeUnit = (next: EntryUnit) => {
     if (next !== unit) onChange(start === null ? '' : formatCumulStartTime(start, next), next);
   };
@@ -39,14 +53,15 @@ function EntrySchedule({ id, raw, unit, duration, onChange }: {
           </div>
           <input id={id} type="text" value={raw} inputMode={unit === 'c' ? 'decimal' : 'text'} placeholder={unit === 'h' ? 'Ex. 07:30' : 'Ex. 7,50'} aria-invalid={invalid} aria-describedby={id + '-equivalent'} onChange={e => onChange(e.target.value, unit)} className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-base font-mono text-white focus:outline-none focus:border-violet-400" />
           <p id={id + '-equivalent'} className={`mt-1 text-xs ${invalid ? 'text-rose-300' : 'text-slate-400'}`} aria-live="polite">
-            {invalid ? 'Horaire invalide (entre 00:00 et 24:00).' : start !== null ? `= ${formatCumulStartTime(start, unit === 'h' ? 'c' : 'h')}${unit === 'h' ? ' h décimales' : ''}` : 'Renseignez le départ de cette activité.'}
+            {invalid ? 'Horaire invalide (entre 00:00 et 24:00).' : start !== null ? `= ${(unit === 'h' ? formatCumulDecimal(start / 3600) : formatCumulStartTime(start, 'h'))}${unit === 'h' ? ' h décimales' : ''}` : 'Renseignez le départ de cette activité.'}
           </p>
         </div>
         <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 px-3 py-2" aria-live="polite">
           <span className="block text-xs font-semibold text-cyan-300">Heure de fin calculée</span>
-          {end ? <>
-            <span className="block text-xl font-mono font-bold text-white">{formatCumulStartTime(end.seconds, 'h')}{end.daysLater > 0 && <span className="ml-1 text-xs text-amber-300">J+{end.daysLater}</span>}</span>
-            <span className="block text-xs text-cyan-300">{formatCumulStartTime(end.seconds, 'c')} h décimales</span>
+          {end !== null ? <>
+            <span className="block text-xl font-mono font-bold text-white">{formatSlotTime(end, 'h')}</span>
+            <span className="block text-xs text-cyan-300">{formatSlotTime(end, 'c')} h décimales</span>
+            {slots.length > 1 && <div className="mt-1 text-xs text-slate-300"><SlotSummary slots={slots} /></div>}
           </> : <span className="block text-sm text-slate-400">—</span>}
         </div>
       </div>
@@ -125,8 +140,15 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
     .filter((e) => e.isBreak)
     .reduce((acc, e) => acc + e.value, 0);
 
-  // Total final = durée (fin-début) + ajouts - pauses
-  const totalCentesimal = calculateNetHours(totalWorkHours, [addedDuration], [totalBreaks]);
+  const dayEndMinutes = parseTimeOfDay(endTime);
+  const scheduleInput: CumulScheduleInput[] = entries.map(e => ({
+    id: e.id, start: normalizeCumulStart(parseCumulStartTime(e.startRaw, e.startUnit), startSeconds, dayEndMinutes),
+    duration: parseDurationInput(e.valueRaw, e.unit), isBreak: e.isBreak,
+  }));
+  const schedule = scheduleCumulEntries(scheduleInput);
+  const deductedBreaks = calculateCumulPauseDeduction(scheduleInput, startSeconds, dayEndMinutes);
+  // Timed work remains net: an interrupting pause must not be deducted twice.
+  const totalCentesimal = calculateNetHours(totalWorkHours, [addedDuration], [deductedBreaks]);
   const invalidTotal = parsedStart === null || (endTime.trim() !== '' && parsedEnd === null) || entries.some(e => parseDurationInput(e.valueRaw, e.unit) === null);
   const totalSexagesimal = centesimalToSexagesimal(totalCentesimal);
 
@@ -214,12 +236,12 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
     ];
     for (const entry of entries) {
       const start = parseCumulStartTime(entry.startRaw, entry.startUnit);
-      const end = start === null ? null : calculateEntryEnd(start, entry.value);
-      const schedule = start !== null && end ? ` | ${formatCumulStartTime(start, 'h')} → ${formatCumulStartTime(end.seconds, 'h')}${end.daysLater ? ' (J+' + end.daysLater + ')' : ''}` : entry.startRaw.trim() ? ' | départ invalide' : '';
-      lines.push(`${entry.isBreak ? 'Pause' : 'Activité'} : ${entry.label} — ${formatSexagesimalDisplay(entry.value)}${schedule}`);
+      const slots = schedule.get(entry.id) ?? [];
+      const timing = slots.length ? ' | ' + slots.map(s => `${formatSlotTime(s.start, 'h')} → ${formatSlotTime(s.end, 'h')} (${formatSlotTime(s.start, 'c')} → ${formatSlotTime(s.end, 'c')})`).join(' / ') : entry.startRaw.trim() && start === null ? ' | départ invalide' : '';
+      lines.push(`${entry.isBreak ? 'Pause' : 'Activité'} : ${entry.label} — ${formatSexagesimalDisplay(entry.value)}${timing}`);
     }
-    if (totalBreaks > 0) lines.push(`Pauses totales : ${totalBreaks.toFixed(2)}c = ${formatSexagesimalDisplay(totalBreaks)}`);
-    lines.push(`TOTAL : ${totalCentesimal.toFixed(2)}h centésimal = ${formatSexagesimalDisplay(totalCentesimal)}`);
+    if (totalBreaks > 0) lines.push(`Pauses totales : ${formatCumulDecimal(totalBreaks)} h = ${formatSexagesimalDisplay(totalBreaks)} ; déduites du total : ${formatCumulDecimal(deductedBreaks)} h`);
+    lines.push(`TOTAL : ${formatCumulDecimal(totalCentesimal)} h centésimal = ${formatSexagesimalDisplay(totalCentesimal)}`);
     navigator.clipboard.writeText(lines.join('\n'));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -303,6 +325,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
 
   // Preview du champ en cours
   const previewValue = newValue ? parseDurationInput(newValue, newUnit) : null;
+  const previewSlots = scheduleCumulEntries([...scheduleInput, { id: '__preview__', start: normalizeCumulStart(parseCumulStartTime(newStartRaw, newStartUnit), startSeconds, dayEndMinutes), duration: previewValue, isBreak: newIsBreak }]).get('__preview__') ?? [];
 
   return (
     <div className="cumul-panel tool-panel w-full max-w-4xl mx-auto my-3 sm:my-8 p-3 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
@@ -377,7 +400,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
               {startSeconds === null
                 ? (startUnit === 'h' ? 'Ex. 07:30 ou 07:19:48 (de 00:00 à 24:00).' : 'Ex. 7,50 ou 7.50 (de 0 à 24).')
                 : (startUnit === 'h'
-                  ? `≈ ${formatCumulStartTime(startSeconds, 'c')} h décimales`
+                  ? `≈ ${formatCumulDecimal(startSeconds / 3600)} h décimales`
                   : `= ${formatCumulStartTime(startSeconds, 'h')} en heure normale`)}
             </p>
           </div>
@@ -404,7 +427,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                 className="w-full bg-slate-900 border border-cyan-500/40 rounded-lg px-3 py-2.5 text-lg font-mono font-bold text-white text-center focus:outline-none focus:border-cyan-400"
               />
               <span className="absolute right-3 top-2.5 text-xs font-mono text-cyan-400">
-                {parsedEnd !== null ? `${parsedEnd.toFixed(2)}h` : '?'}
+                {parsedEnd !== null ? `${formatCumulDecimal(parsedEnd)}h` : '?'}
               </span>
             </div>
           </div>
@@ -418,7 +441,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
             </span>
             <span className="text-slate-600">=</span>
             <span className="font-mono font-bold text-cyan-300">
-              {totalWorkHours.toFixed(2)}h
+              {formatCumulDecimal(totalWorkHours)}h
             </span>
           </div>
         )}
@@ -452,7 +475,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
             const editing = editingId === entry.id;
             const validDuration = parseDurationInput(entry.valueRaw, entry.unit);
             const entryStart = parseCumulStartTime(entry.startRaw, entry.startUnit);
-            const entryEnd = entryStart !== null && validDuration !== null ? calculateEntryEnd(entryStart, validDuration) : null;
+            const entrySlots = schedule.get(entry.id) ?? [];
 
             return (
               <div
@@ -488,9 +511,9 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                     <div className="flex items-baseline gap-2 flex-wrap">
                       <span className="text-sm font-semibold text-white break-all">{entry.label || 'Sans libellé'}</span>
                       {entry.isBreak && <span className="text-xs text-rose-300">Pause</span>}
-                      <span className={`text-xs font-mono font-semibold ${entry.isBreak ? 'text-rose-300' : 'text-cyan-300'}`}>{validDuration === null ? 'Durée invalide' : `${entry.isBreak ? '−' : ''}${entry.value.toFixed(2).replace('.', ',')} h · ${formatSexagesimalDisplay(entry.value)}`}</span>
+                      <span className={`text-xs font-mono font-semibold ${entry.isBreak ? 'text-rose-300' : 'text-cyan-300'}`}>{validDuration === null ? 'Durée invalide' : `${entry.isBreak ? '−' : ''}${formatCumulDecimal(entry.value)} h · ${formatSexagesimalDisplay(entry.value)}`}</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">{entryStart !== null && entryEnd ? <>{formatCumulStartTime(entryStart, 'h')} → {formatCumulStartTime(entryEnd.seconds, 'h')}{entryEnd.daysLater ? ` J+${entryEnd.daysLater}` : ''}<span className="text-cyan-300"> · {formatCumulStartTime(entryStart, 'c')} → {formatCumulStartTime(entryEnd.seconds, 'c')}</span></> : entry.startRaw.trim() && entryStart === null ? <span className="text-rose-300">Départ invalide</span> : entryStart !== null ? 'Fin non calculable' : 'Départ non renseigné'}</p>
+                     <div className="text-xs text-slate-400 mt-0.5">{entrySlots.length ? <><SlotSummary slots={entrySlots} />{entrySlots.length > 1 && <span className="text-[10px] text-amber-300">Activité découpée automatiquement</span>}{entrySlots.length === 1 && entrySlots[0].start !== scheduleInput[idx].start && <span className="text-[10px] text-amber-300"> · départ décalé</span>}</> : entry.startRaw.trim() && entryStart === null ? <span className="text-rose-300">Départ invalide</span> : entryStart !== null ? 'Fin non calculable' : 'Départ non renseigné'}</div>
                   </div>
                   <button type="button" aria-expanded={editing} aria-controls={`entry-editor-${entry.id}`} onClick={() => setEditingId(editing ? null : entry.id)} className="shrink-0 rounded-lg border border-slate-700 px-3 py-1 text-xs font-semibold text-sky-300">{editing ? 'Terminer' : 'Modifier'}</button>
                 </div>
@@ -616,7 +639,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                   </div>
                 </div>
                 <EntrySchedule id={`entry-start-${entry.id}`} raw={entry.startRaw} unit={entry.startUnit}
-                  duration={parseDurationInput(entry.valueRaw, entry.unit)}
+                  slots={entrySlots}
                   onChange={(raw, unit) => handleUpdateSchedule(entry.id, raw, unit)} />
                 </div>
               </div>
@@ -759,14 +782,14 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
             <span>Ajouter</span>
           </button>
         </div>
-        <EntrySchedule id="new-entry-start" raw={newStartRaw} unit={newStartUnit} duration={previewValue}
+        <EntrySchedule id="new-entry-start" raw={newStartRaw} unit={newStartUnit} slots={previewSlots}
           onChange={(raw, unit) => { setNewStartRaw(raw); setNewStartUnit(unit); }} />
         </div>
       </div>
 
       {newValue.trim() !== '' && previewValue === null && <p role="alert" className="text-sm text-rose-300">Durée invalide. Exemple : 0,50 ou 0:30.</p>}
       {invalidTotal && <p role="alert" className="text-sm text-rose-300">Corrigez les horaires ou durées invalides ; le total est provisoire et ne peut pas être copié.</p>}
-      {!invalidTotal && totalBreaks > totalWorkHours + addedDuration && <p role="status" className="text-sm text-amber-300">Les pauses dépassent la durée disponible ; le total est ramené à zéro.</p>}
+      {!invalidTotal && deductedBreaks > totalWorkHours + addedDuration && <p role="status" className="text-sm text-amber-300">Les pauses dépassent la durée disponible ; le total est ramené à zéro.</p>}
       {/* TOTAL BANNER */}
       <div className="cumul-total-banner mt-3 p-3 sm:p-5 rounded-xl bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/30 border border-violet-500/30 shadow-xl">
         <div className="cumul-totals grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
@@ -797,15 +820,15 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
             </div>
             <div>
               <span className="text-[11px] uppercase font-bold text-rose-300 block">
-                Pauses déduites
+                Pauses
               </span>
               <p className="text-2xl font-extrabold font-mono text-rose-300">
-                {totalBreaks > 0 ? '−' : ''}{totalBreaks.toFixed(2)}
+                {formatCumulDecimal(totalBreaks)}
                 <span className="text-sm text-rose-500 font-bold ml-1">h</span>
               </p>
               {totalBreaks > 0 && (
                 <p className="text-[11px] text-slate-500">
-                  = {formatSexagesimalDisplay(totalBreaks)}
+                  = {formatSexagesimalDisplay(totalBreaks)}{deductedBreaks !== totalBreaks && <span className="block">Déduites : {formatCumulDecimal(deductedBreaks)} h</span>}
                 </p>
               )}
             </div>
@@ -821,7 +844,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                 TOTAL en Centièmes
               </span>
               <p className="text-3xl font-extrabold font-mono text-cyan-300">
-                {totalCentesimal.toFixed(2)}
+                {formatCumulDecimal(totalCentesimal)}
                 <span className="text-lg text-cyan-500 font-bold ml-1">h</span>
               </p>
             </div>

@@ -239,3 +239,84 @@ export function reorderEntries<T>(items: T[], from: number, to: number): T[] {
   next.splice(to, 0, item);
   return next;
 }
+
+/** Presentation only: one decimal in French; never use this to reconstruct a time. */
+export function formatCumulDecimal(hours: number): string {
+  return hours.toFixed(1).replace('.', ',');
+}
+
+export interface CumulSlot { start: number; end: number }
+export interface CumulScheduleInput { id: string; start: number | null; duration: number | null; isBreak?: boolean }
+
+/** Merge overlapping/touching intervals. Inputs and outputs use absolute seconds. */
+function mergeCumulSlots(slots: CumulSlot[]): CumulSlot[] {
+  const merged: CumulSlot[] = [];
+  for (const slot of [...slots].sort((a,b) => a.start - b.start || a.end - b.end)) {
+    if (slot.end <= slot.start) continue;
+    const last = merged[merged.length - 1];
+    if (last && slot.start <= last.end) last.end = Math.max(last.end, slot.end);
+    else merged.push({ ...slot });
+  }
+  return merged;
+}
+
+/** When the explicitly entered day crosses midnight, morning times belong to the next day. */
+export function normalizeCumulStart(start: number | null, dayStart: number | null, dayEndMinutes: number | null): number | null {
+  if (start === null) return null;
+  return dayStart !== null && dayEndMinutes !== null && dayEndMinutes * 60 < dayStart && start < dayStart ? start + 86400 : start;
+}
+
+/** Fixed pauses take priority, then the activity with the later requested start.
+ * Equal starts use list order (first row wins). Earlier interrupted work resumes
+ * in the next free slot. The original inputs are never mutated or duplicated.
+ */
+export function scheduleCumulEntries(entries: CumulScheduleInput[]): Map<string, CumulSlot[]> {
+  const result = new Map<string, CumulSlot[]>();
+  const valid = entries.map((e,index) => ({ ...e, index, seconds: e.duration === null ? NaN : Math.round(e.duration * 3600) }))
+    .filter(e => e.start !== null && Number.isSafeInteger(e.start) && e.start >= 0 && Number.isSafeInteger(e.seconds) && e.seconds >= 0 && Number.isSafeInteger(e.start + e.seconds));
+  const pauses = valid.filter(e => e.isBreak);
+  let occupied = mergeCumulSlots(pauses.map(e => ({ start: e.start!, end: e.start! + e.seconds })));
+  for (const e of pauses) result.set(e.id, [{ start: e.start!, end: e.start! + e.seconds }]);
+  for (const e of valid.filter(e => !e.isBreak).sort((a,b) => b.start! - a.start! || a.index - b.index)) {
+    let cursor = e.start!;
+    let remaining = e.seconds;
+    const slots: CumulSlot[] = [];
+    if (remaining === 0) { result.set(e.id, [{ start: cursor, end: cursor }]); continue; }
+    for (const busy of occupied) {
+      if (busy.end <= cursor) continue;
+      if (busy.start > cursor) {
+        const length = Math.min(remaining, busy.start - cursor);
+        slots.push({ start: cursor, end: cursor + length });
+        remaining -= length;
+        cursor += length;
+        if (remaining === 0) break;
+      }
+      cursor = Math.max(cursor, busy.end);
+    }
+    if (remaining > 0) {
+      if (!Number.isSafeInteger(cursor + remaining)) continue;
+      slots.push({ start: cursor, end: cursor + remaining });
+    }
+    result.set(e.id, slots);
+    occupied = mergeCumulSlots([...occupied, ...slots]);
+  }
+  return result;
+}
+
+/** Pauses are not deducted twice from scheduled work, whose duration is already net.
+ * With a day interval, timed pauses are deducted only inside that interval (union).
+ * Without a day interval or timed work, keep the traditional duration-only deduction.
+ * Untimed pauses always retain the traditional deduction.
+ */
+export function calculateCumulPauseDeduction(entries: CumulScheduleInput[], dayStart: number | null, dayEndMinutes: number | null): number {
+  const timed = entries.filter(e => e.isBreak && e.start !== null && e.duration !== null && e.duration >= 0 && Number.isSafeInteger(e.start + Math.round(e.duration * 3600)))
+    .map(e => ({ start: e.start!, end: e.start! + Math.round(e.duration! * 3600) }));
+  const untimed = entries.filter(e => e.isBreak && e.start === null && e.duration !== null).reduce((sum,e) => sum + e.duration!, 0);
+  const hasTimedWork = entries.some(e => !e.isBreak && e.start !== null && e.duration !== null && e.duration > 0);
+  if (dayStart !== null && dayEndMinutes !== null) {
+    const end = dayEndMinutes * 60 + (dayEndMinutes * 60 < dayStart ? 86400 : 0);
+    const overlap = mergeCumulSlots(timed.map(s => ({ start: Math.max(dayStart,s.start), end: Math.min(end,s.end) })));
+    return untimed + overlap.reduce((sum,s) => sum + s.end - s.start, 0) / 3600;
+  }
+  return untimed + (hasTimedWork ? 0 : mergeCumulSlots(timed).reduce((sum,s) => sum + s.end - s.start, 0) / 3600);
+}
