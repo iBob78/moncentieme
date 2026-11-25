@@ -91,6 +91,9 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
 
   // === DURÉES À AJOUTER / DÉDUIRE (pauses, heures supp...) ===
   const [entries, setEntries] = useState<CumulEntry[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [editingDay, setEditingDay] = useState(false);
   const [newLabel, setNewLabel] = useState<string>('');
   const [newValue, setNewValue] = useState<string>('');
   const [newUnit, setNewUnit] = useState<EntryUnit>('h');
@@ -141,6 +144,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
     };
 
     setEntries([...entries, entry]);
+    setAdding(false);
     setNewLabel('');
     setNewValue('');
     setNewIsBreak(false);
@@ -157,6 +161,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
 
   const handleRemoveEntry = (id: string) => {
     setEntries(entries.filter((e) => e.id !== id));
+    if (editingId === id) setEditingId(null);
   };
 
   const handleUpdateValue = (id: string, raw: string) => {
@@ -181,6 +186,9 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
 
   const handleReset = () => {
     setEntries([]);
+    setEditingId(null);
+    setAdding(false);
+    setEditingDay(false);
     setNewLabel('');
     setNewValue('');
     setNewIsBreak(false);
@@ -248,9 +256,9 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
   const previewValue = newValue ? parseDurationInput(newValue, newUnit) : null;
 
   return (
-    <div className="tool-panel w-full max-w-4xl mx-auto my-3 sm:my-8 p-3 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
+    <div className="cumul-panel tool-panel w-full max-w-4xl mx-auto my-3 sm:my-8 p-3 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-6">
+      <div className="cumul-heading flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-3">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/20 to-cyan-500/20 border border-violet-500/30 text-violet-400">
             <Timer className="w-6 h-6" />
@@ -259,9 +267,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
             <h2 className="text-xl font-bold text-white tracking-wide">
               Cumul de la journée
             </h2>
-            <p className="text-xs text-slate-400">
-              Référez votre heure de début, saisissez la fin (optionnel) et vos pauses — total converti automatiquement
-            </p>
+            <p className="cumul-intro text-xs text-slate-400">Durées, pauses et horaires.</p>
           </div>
         </div>
 
@@ -276,7 +282,15 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
       </div>
 
       {/* === SECTION 1 : DÉBUT / FIN === */}
-      <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/20 border border-violet-500/30">
+      <div className="cumul-day mb-3 p-2 sm:p-4 rounded-xl bg-slate-950/70 border border-violet-500/30">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <span className="block text-[11px] font-semibold text-violet-300">Horaires de la journée</span>
+            <span className="text-sm font-mono font-semibold text-white">{startSeconds === null ? 'Début invalide' : formatCumulStartTime(startSeconds, 'h')} → {parsedEnd !== null ? formatTimeOfDay(parsedEnd) : endTime.trim() ? 'Fin invalide' : '—'}</span>
+          </div>
+          <button type="button" aria-expanded={editingDay} aria-controls="cumul-day-fields" onClick={() => setEditingDay(v => !v)} className="shrink-0 rounded-lg border border-slate-700 px-3 text-xs text-violet-300">{editingDay ? 'Terminer' : 'Modifier'}</button>
+        </div>
+        <div id="cumul-day-fields" hidden={!editingDay} className="mt-3">
         <div className="flex items-center gap-2 mb-3">
           <Flag className="w-4 h-4 text-violet-400" />
           <span className="text-[11px] uppercase font-bold tracking-wider text-violet-300">
@@ -361,8 +375,9 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
         )}
       </div>
 
+      </div>
       {/* Unit legend */}
-      <div className="flex flex-wrap items-center gap-3 mb-4 text-[11px]">
+      <div className="cumul-legend flex flex-wrap items-center gap-3 mb-4 text-[11px]">
         <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-semibold">
           <Cpu className="w-3 h-3" />
           <span>Centièmes : 1h = 100c (ex: 0.33 = 33c)</span>
@@ -379,20 +394,24 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
 
       {/* Entries list (pauses / ajouts) */}
       {entries.length > 0 && (
-        <div className="space-y-2.5 mb-6">
+        <div className="space-y-1.5 mb-3">
           {entries.map((entry, idx) => {
             const isDragging = draggingIndex === idx;
             const isDragOver = dragOverIndex === idx && draggingIndex !== idx;
+            const editing = editingId === entry.id;
+            const validDuration = parseDurationInput(entry.valueRaw, entry.unit);
+            const entryStart = parseCumulStartTime(entry.startRaw, entry.startUnit);
+            const entryEnd = entryStart !== null && validDuration !== null ? calculateEntryEnd(entryStart, validDuration) : null;
 
             return (
               <div
                 key={entry.id}
-                draggable={allowDrag}
+                draggable={allowDrag && !editing}
                 onDragStart={() => { if (allowDrag) handleDragStart(idx); }}
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDrop={() => handleDrop(idx)}
                 onDragEnd={handleDragEnd}
-                className={`group p-3 rounded-xl border transition-all ${allowDrag ? 'cursor-grab active:cursor-grabbing' : ''} ${
+                className={`group p-2 rounded-xl border transition-all ${allowDrag && !editing ? 'cursor-grab active:cursor-grabbing' : ''} ${
                   isDragging
                     ? 'bg-slate-900/90 border-violet-500/50 shadow-lg shadow-violet-500/10 opacity-60'
                     : isDragOver
@@ -402,6 +421,18 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                     : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700'
                 }`}
               >
+                <div className="entry-summary flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-white break-all">{entry.label || 'Sans libellé'}</span>
+                      {entry.isBreak && <span className="text-xs text-rose-300">Pause</span>}
+                      <span className={`text-xs font-mono font-semibold ${entry.isBreak ? 'text-rose-300' : 'text-cyan-300'}`}>{validDuration === null ? 'Durée invalide' : `${entry.isBreak ? '−' : ''}${entry.value.toFixed(2).replace('.', ',')} h · ${formatSexagesimalDisplay(entry.value)}`}</span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">{entryStart !== null && entryEnd ? <>{formatCumulStartTime(entryStart, 'h')} → {formatCumulStartTime(entryEnd.seconds, 'h')}{entryEnd.daysLater ? ` J+${entryEnd.daysLater}` : ''}<span className="text-cyan-300"> · {formatCumulStartTime(entryStart, 'c')} → {formatCumulStartTime(entryEnd.seconds, 'c')}</span></> : entry.startRaw.trim() && entryStart === null ? <span className="text-rose-300">Départ invalide</span> : entryStart !== null ? 'Fin non calculable' : 'Départ non renseigné'}</p>
+                  </div>
+                  <button type="button" aria-expanded={editing} aria-controls={`entry-editor-${entry.id}`} onClick={() => setEditingId(editing ? null : entry.id)} className="shrink-0 rounded-lg border border-slate-700 px-3 py-1 text-xs font-semibold text-sky-300">{editing ? 'Terminer' : 'Modifier'}</button>
+                </div>
+                <div id={`entry-editor-${entry.id}`} hidden={!editing} className="mt-2 pt-2 border-t border-slate-800">
                 <div className="cumul-entry-row flex flex-col sm:flex-row sm:items-center gap-3">
                   {/* Drag handle + Row number */}
                   <div className="entry-index flex items-center gap-2 shrink-0">
@@ -523,6 +554,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                 <EntrySchedule id={`entry-start-${entry.id}`} raw={entry.startRaw} unit={entry.startUnit}
                   duration={parseDurationInput(entry.valueRaw, entry.unit)}
                   onChange={(raw, unit) => handleUpdateSchedule(entry.id, raw, unit)} />
+                </div>
               </div>
             );
           })}
@@ -536,7 +568,9 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
       )}
 
       {/* Add new entry form */}
-      <div className="p-4 rounded-xl bg-slate-950/80 border border-dashed border-slate-700 hover:border-violet-500/40 transition-colors">
+      <div className="p-2 sm:p-4 rounded-xl bg-slate-950/80 border border-dashed border-slate-700 hover:border-violet-500/40 transition-colors">
+        <button type="button" aria-expanded={adding} aria-controls="cumul-add-fields" onClick={() => setAdding(v => !v)} className="w-full flex items-center justify-center gap-2 rounded-lg bg-violet-600/20 text-violet-200 font-semibold text-sm px-3 py-2"><Plus className="w-4 h-4" />{adding ? 'Replier le formulaire' : 'Ajouter une activité ou une pause'}</button>
+        <div id="cumul-add-fields" hidden={!adding} className="mt-3">
         <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 block mb-3">
           Ajouter une durée ou une pause
         </span>
@@ -663,13 +697,14 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
         </div>
         <EntrySchedule id="new-entry-start" raw={newStartRaw} unit={newStartUnit} duration={previewValue}
           onChange={(raw, unit) => { setNewStartRaw(raw); setNewStartUnit(unit); }} />
+        </div>
       </div>
 
       {newValue.trim() !== '' && previewValue === null && <p role="alert" className="text-sm text-rose-300">Durée invalide. Exemple : 0,50 ou 0:30.</p>}
       {invalidTotal && <p role="alert" className="text-sm text-rose-300">Corrigez les horaires ou durées invalides ; le total est provisoire et ne peut pas être copié.</p>}
       {!invalidTotal && totalBreaks > totalWorkHours + addedDuration && <p role="status" className="text-sm text-amber-300">Les pauses dépassent la durée disponible ; le total est ramené à zéro.</p>}
       {/* TOTAL BANNER */}
-      <div className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/30 border border-violet-500/30 shadow-xl">
+      <div className="cumul-total-banner mt-3 p-3 sm:p-5 rounded-xl bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/30 border border-violet-500/30 shadow-xl">
         <div className="cumul-totals grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
           {/* Duration of work */}
           <div className="flex items-center gap-3">

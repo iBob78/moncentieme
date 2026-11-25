@@ -131,3 +131,43 @@
 @media (prefers-reduced-motion: reduce) {
   .app-shell *, .app-shell *::before, .app-shell *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Compact overview: controls appear on demand, without changing stored values. */
+.clock-short-name { display: none; }
+.cumul-heading h2 { font-size: 1.05rem; }
+.entry-summary { min-height: 44px; }
+.entry-summary button, .cumul-day button { min-height: 44px; }
+.cumul-panel [hidden] { display: none !important; }
+@media (max-width: 767px) {
+  .app-header { position: relative; }
+  .app-main { padding-top: .5rem; }
+  .app-main > :not([hidden]) ~ :not([hidden]) { margin-top: .5rem; }
+  .clock-panel .clock-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .375rem; }
+  .clock-card { padding: .375rem; border-radius: .75rem; box-shadow: none; backdrop-filter: none; }
+  .clock-heading { justify-content: center; margin-bottom: .25rem; }
+  .clock-heading > span, .clock-heading > div > div:first-child, .clock-heading p, .clock-heading button, .clock-full-name { display: none; }
+  .clock-short-name { display: inline; }
+  .clock-heading h2 { font-size: .8rem; line-height: 1.2; }
+  .clock-dial { margin-block: .125rem; }
+  .clock-panel .clock-face { padding: .2rem; box-shadow: none; }
+  .clock-readout { margin-top: .25rem; padding: .25rem; border-radius: .5rem; }
+  .clock-readout > span, .clock-copy-row > span, .clock-footnote { display: none; }
+  .clock-digits { flex-wrap: wrap; justify-content: center; gap: .125rem; }
+  .clock-digits .font-mono-digits { font-size: clamp(.9rem, 4.5vw, 1.75rem); line-height: 1.2; }
+  .clock-digits > span:not(.font-mono-digits) { font-size: .65rem; }
+  .clock-copy-row { margin-top: 0; }
+  .clock-copy-row button { justify-content: center; min-height: 44px; }
+  .home-converter { display: none; }
+  .cumul-panel { padding: .5rem; margin-block: .5rem; }
+  .cumul-heading > div { gap: .375rem; }
+  .cumul-heading > div > div:first-child, .cumul-intro, .cumul-legend { display: none; }
+  .cumul-heading h2 { font-size: .95rem; }
+  .entry-summary { gap: .375rem; }
+  .entry-summary button { padding-inline: .5rem; }
+  .cumul-total-banner { padding: .5rem; }
+  .cumul-totals > div:first-child { display: none; } /* Duplicate of net duration. */
+  .cumul-totals { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .375rem; }
+  .cumul-totals > div > div:first-child { display: none; }
+  .cumul-totals > div > div:last-child > span { font-size: .58rem; }
+  .cumul-totals .text-3xl, .cumul-totals .text-2xl { font-size: clamp(.8rem, 3.8vw, 1.25rem); }
+}

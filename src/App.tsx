@@ -300,7 +300,7 @@ export function App() {
 
           </>
         )}
-        <div hidden={activeTab !== 'clocks' && activeTab !== 'converter'}><ConverterTool /></div>
+        <div hidden={activeTab !== 'clocks' && activeTab !== 'converter'} className={activeTab === 'clocks' ? 'home-converter' : undefined}><ConverterTool /></div>
         <div hidden={activeTab !== 'cumul'}><CumulCalculator allowDrag={!layout.touch} /></div>
         <div hidden={activeTab !== 'payroll'}><PayrollTimesheetCalculator /></div>
         <div hidden={activeTab !== 'stopwatch'}><DualStopwatch /></div>

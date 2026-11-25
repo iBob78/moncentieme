@@ -40,6 +40,9 @@ L'application adapte automatiquement sa présentation à la largeur disponible e
 
 Contrôles manuels recommandés : 320, 360, 390, 430, 768, 1024 et 1440 px, portrait/paysage, clavier ouvert, navigation, cumul Harmo et réorganisation tactile ; vérifier Safari iOS et Chrome Android sur appareils réels.
 
+### Vue compacte
+Sur smartphone, les deux cadrans de l'accueil restent côte à côte, avec les heures numériques et la copie. Le convertisseur reste accessible dans son onglet dédié ; les explications dans l'aide. Dans le cumul, les activités sont affichées en lecture compacte (libellé, durée dans les deux unités, départ et fin) ; « Modifier » ouvre les champs de la ligne et « Terminer » les replie. Les modifications sont appliquées immédiatement. Les horaires de journée et le formulaire d'ajout sont également repliables. Les commandes de déplacement et suppression restent dans l'éditeur. Aucun changement des règles de calcul.
+
 ## Développement
 
 Node.js 22.18+ (LTS recommandé), npm et Git.

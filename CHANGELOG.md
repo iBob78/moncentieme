@@ -4,6 +4,7 @@ Ce journal décrit les évolutions versionnées. Le statut de déploiement est �
 
 ## En préparation — optimisation smartphone (25 novembre 2026)
 
+- Densité mobile revue après retour utilisateur : deux cadrans côte à côte, lecture numérique compacte ; cumul en mode lecture avec édition à la demande, horaires de journée et ajout repliables. Les données et calculs restent identiques.
 - Détection réactive de la largeur, du pointeur principal et de la préférence de mouvement, sans identification du navigateur ni transmission de données.
 - En-tête compact, cinq onglets visibles sans défilement horizontal, zones tactiles agrandies, champs à 16 px et clavier décimal.
 - Cartes cumul plus compactes, réorganisation par flèches accessible sur téléphone et ordinateur, cadrans redimensionnables, pointage et dialogues adaptés.
