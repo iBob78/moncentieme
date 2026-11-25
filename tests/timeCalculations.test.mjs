@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd } from '../src/utils/timeCalculations.ts';
+import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd, reorderEntries } from '../src/utils/timeCalculations.ts';
 
 test('conversion et arrondi', () => {
   assert.equal(timeToCentesimal(13, 30), 13.5);
@@ -74,4 +74,21 @@ test('horaire de chaque activité : Harmo 2,70 h, équivalence et minuit', () =>
   assert.equal(calculateEntryEnd(-1, 2.7), null);
   assert.equal(calculateEntryEnd(27000, Infinity), null);
   assert.equal(calculateNetHours(0, [duration], []), 2.7);
+});
+
+test('réorganisation du cumul : déplacer une pause avant ou après une activité', () => {
+  const harmo = { id: 'h', value: 2.7, startRaw: '07:30', isBreak: false };
+  const pause = { id: 'p', value: 0.5, startRaw: '10:12', isBreak: true };
+  const reunion = { id: 'r', value: 1.5, startRaw: '10:42', isBreak: false };
+  const original = [harmo, pause, reunion];
+  const before = reorderEntries(original, 1, 0);
+  assert.deepEqual(before, [pause, harmo, reunion]);
+  assert.deepEqual(reorderEntries(before, 0, 2), [harmo, reunion, pause]);
+  assert.deepEqual(original, [harmo, pause, reunion]);
+  assert.strictEqual(before[0], pause);
+  assert.strictEqual(reorderEntries(original, 0, -1), original);
+  assert.strictEqual(reorderEntries(original, 2, 3), original);
+  assert.strictEqual(reorderEntries(original, 1, 1), original);
+  const total = entries => calculateNetHours(0, entries.filter(e => !e.isBreak).map(e => e.value), entries.filter(e => e.isBreak).map(e => e.value));
+  assert.equal(total(before), total(original));
 });

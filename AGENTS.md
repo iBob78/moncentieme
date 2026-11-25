@@ -25,7 +25,7 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 ## Responsive et accessibilité
 Utiliser les media queries de largeur et de pointeur, pas le user-agent pour identifier un téléphone. Réagir aux changements de taille et de capacité tactile. Garder les cinq onglets accessibles sans défilement horizontal, les cibles tactiles d'au moins 44 px en hauteur, les champs tactiles à 16 px et le zoom activé. Prévoir une alternative clavier/tactile au glisser-déposer. Tester 320/360/390/430/768/1024/1440 px, orientation, clavier virtuel et dialogues. Respecter prefers-reduced-motion ; ne collecter aucune donnée d'appareil.
 
-Les deux cadrans doivent rester côte à côte sur mobile (dès 320 px). Les lignes du cumul sont compactes par défaut ; ouvrir une seule édition à la fois, afficher les données essentielles hors édition et préserver les saisies lors du repli. Ne pas supprimer une fonctionnalité pour gagner de la place : accès via l'onglet ou l'éditeur dédié.
+Les deux cadrans doivent rester côte à côte sur mobile (dès 320 px). Les lignes du cumul sont compactes par défaut ; ouvrir une seule édition à la fois, afficher les données essentielles hors édition et préserver les saisies lors du repli. Ne pas supprimer une fonctionnalité pour gagner de la place : accès via l'onglet ou l'éditeur dédié. La poignée de réorganisation du cumul reste visible hors édition, supporte le glisser tactile et souris, et donne accès aux flèches au clavier ou au toucher. Le déplacement conserve toutes les données et ne modifie pas les horaires manuels.
 
 ## Vérifications
 1. Node 22.18+ recommandé ; npm ci.

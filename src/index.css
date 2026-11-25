@@ -171,3 +171,12 @@
   .cumul-totals > div > div:last-child > span { font-size: .58rem; }
   .cumul-totals .text-3xl, .cumul-totals .text-2xl { font-size: clamp(.8rem, 3.8vw, 1.25rem); }
 }
+
+/* A single dedicated grip keeps the overview dense. Scrolling elsewhere is unchanged. */
+.entry-summary .entry-grip { width: 44px; min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; touch-action: none; cursor: grab; user-select: none; }
+.entry-grip:active { cursor: grabbing; }
+.entry-grip:disabled { opacity: .35; cursor: default; touch-action: auto; }
+.entry-move-controls button { min-height: 44px; }
+@media (max-width: 767px) {
+  .entry-summary .entry-grip { margin-left: -.375rem; }
+}

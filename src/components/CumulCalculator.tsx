@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { centesimalToSexagesimal, parseTimeOfDay, parseDurationInput, calculateNetHours, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd } from '../utils/timeCalculations';
+import React, { useState, useCallback, useRef } from 'react';
+import { centesimalToSexagesimal, parseTimeOfDay, parseDurationInput, calculateNetHours, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd, reorderEntries } from '../utils/timeCalculations';
 import { Plus, Trash2, Clock, Cpu, RotateCcw, Copy, Check, GripVertical, ArrowRight, Flag, Timer, Coffee } from 'lucide-react';
 
 type EntryUnit = 'c' | 'h';
@@ -92,6 +92,11 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
   // === DURÉES À AJOUTER / DÉDUIRE (pauses, heures supp...) ===
   const [entries, setEntries] = useState<CumulEntry[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [reorderId, setReorderId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const touchDrag = useRef<{ id: string; pointerId: number; startY: number; moved: boolean } | null>(null);
+  const ignoreDragClick = useRef(false);
+  const [moveMessage, setMoveMessage] = useState('');
   const [adding, setAdding] = useState(false);
   const [editingDay, setEditingDay] = useState(false);
   const [newLabel, setNewLabel] = useState<string>('');
@@ -162,6 +167,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
   const handleRemoveEntry = (id: string) => {
     setEntries(entries.filter((e) => e.id !== id));
     if (editingId === id) setEditingId(null);
+    if (reorderId === id) setReorderId(null);
   };
 
   const handleUpdateValue = (id: string, raw: string) => {
@@ -187,6 +193,8 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
   const handleReset = () => {
     setEntries([]);
     setEditingId(null);
+    setReorderId(null);
+    setMoveMessage('');
     setAdding(false);
     setEditingDay(false);
     setNewLabel('');
@@ -217,39 +225,80 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Accessible reordering works with touch, keyboard and mouse.
-  const moveEntry = (index: number, direction: -1 | 1) => {
+  // Both native mouse drag and touch grip use the same immutable move.
+  const moveEntry = (id: string, direction: -1 | 1) => {
+    const index = entries.findIndex(e => e.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= entries.length) return;
     setEntries(prev => {
-      const next = index + direction;
-      if (index < 0 || index >= prev.length || next < 0 || next >= prev.length) return prev;
-      const reordered = [...prev];
-      [reordered[index], reordered[next]] = [reordered[next], reordered[index]];
-      return reordered;
+      const from = prev.findIndex(e => e.id === id);
+      return from < 0 ? prev : reorderEntries(prev, from, from + direction);
     });
+    setMoveMessage(`${entries[index].label} déplacé en position ${target + 1}.`);
   };
 
-  // Drag and drop
   const handleDragStart = (index: number) => setDraggingIndex(index);
   const handleDragOver = (e: React.DragEvent, index: number) => {
+    if (draggingIndex === null) return;
     e.preventDefault();
     setDragOverIndex(index);
   };
   const handleDrop = useCallback((dropIndex: number) => {
-    if (draggingIndex === null || draggingIndex === dropIndex) {
-      setDraggingIndex(null);
-      setDragOverIndex(null);
-      return;
+    if (draggingIndex !== null) {
+      const entry = entries[draggingIndex];
+      if (entry && dropIndex !== draggingIndex) {
+        setEntries(prev => reorderEntries(prev, prev.findIndex(e => e.id === entry.id), dropIndex));
+        setMoveMessage(`${entry.label} déplacé en position ${dropIndex + 1}.`);
+      }
     }
-    const newEntries = [...entries];
-    const [draggedEntry] = newEntries.splice(draggingIndex, 1);
-    newEntries.splice(dropIndex, 0, draggedEntry);
-    setEntries(newEntries);
     setDraggingIndex(null);
     setDragOverIndex(null);
   }, [draggingIndex, entries]);
   const handleDragEnd = () => {
     setDraggingIndex(null);
     setDragOverIndex(null);
+  };
+
+  const touchTarget = (x: number, y: number): number | null => {
+    const row = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-cumul-entry]');
+    if (!row || !listRef.current?.contains(row)) return null;
+    const index = entries.findIndex(e => e.id === row.dataset.cumulEntry);
+    return index < 0 ? null : index;
+  };
+  const handleGripDown = (e: React.PointerEvent<HTMLButtonElement>, id: string) => {
+    ignoreDragClick.current = false;
+    if (e.pointerType === 'mouse' || !e.isPrimary || entries.length < 2) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    touchDrag.current = { id, pointerId: e.pointerId, startY: e.clientY, moved: false };
+  };
+  const handleGripMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = touchDrag.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    if (!drag.moved && Math.abs(e.clientY - drag.startY) < 6) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      ignoreDragClick.current = true;
+      setReorderId(null);
+      setDraggingIndex(entries.findIndex(entry => entry.id === drag.id));
+    }
+    if (e.clientY < 65) window.scrollBy(0, -18);
+    else if (e.clientY > window.innerHeight - 65) window.scrollBy(0, 18);
+    setDragOverIndex(touchTarget(e.clientX, e.clientY));
+  };
+  const finishGrip = (e: React.PointerEvent<HTMLButtonElement>, cancel = false) => {
+    const drag = touchDrag.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    touchDrag.current = null;
+    if (drag.moved) {
+      const target = cancel ? null : touchTarget(e.clientX, e.clientY);
+      const from = entries.findIndex(entry => entry.id === drag.id);
+      if (target !== null && from >= 0 && target !== from) {
+        setEntries(prev => reorderEntries(prev, prev.findIndex(entry => entry.id === drag.id), target));
+        setMoveMessage(`${entries[from].label} déplacé en position ${target + 1}.`);
+      }
+    }
+    handleDragEnd();
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
   // Preview du champ en cours
@@ -394,7 +443,9 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
 
       {/* Entries list (pauses / ajouts) */}
       {entries.length > 0 && (
-        <div className="space-y-1.5 mb-3">
+        <div ref={listRef} className="space-y-1.5 mb-3">
+          <p className="text-[11px] text-slate-400 px-1">Glissez la poignée pour déplacer une ligne, ou touchez-la pour afficher les flèches.</p>
+          <span className="sr-only" role="status" aria-live="polite">{moveMessage}</span>
           {entries.map((entry, idx) => {
             const isDragging = draggingIndex === idx;
             const isDragOver = dragOverIndex === idx && draggingIndex !== idx;
@@ -406,6 +457,7 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
             return (
               <div
                 key={entry.id}
+                data-cumul-entry={entry.id}
                 draggable={allowDrag && !editing}
                 onDragStart={() => { if (allowDrag) handleDragStart(idx); }}
                 onDragOver={(e) => handleDragOver(e, idx)}
@@ -422,6 +474,16 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                 }`}
               >
                 <div className="entry-summary flex items-center gap-2">
+                  <button type="button" className="entry-grip shrink-0 rounded-lg text-slate-400 hover:text-sky-300"
+                    aria-label={`Déplacer ${entry.label}`} aria-expanded={reorderId === entry.id} aria-controls={`move-${entry.id}`}
+                    title="Glisser ou toucher pour déplacer"
+                    disabled={entries.length < 2}
+                    onPointerDown={e => handleGripDown(e, entry.id)} onPointerMove={handleGripMove}
+                    onPointerUp={e => finishGrip(e)} onPointerCancel={e => finishGrip(e, true)}
+                    onLostPointerCapture={e => finishGrip(e, true)}
+                    onClick={e => { if (ignoreDragClick.current && e.detail !== 0) { ignoreDragClick.current = false; return; } setReorderId(prev => prev === entry.id ? null : entry.id); }}>
+                    <GripVertical aria-hidden="true" className="w-5 h-5" />
+                  </button>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2 flex-wrap">
                       <span className="text-sm font-semibold text-white break-all">{entry.label || 'Sans libellé'}</span>
@@ -432,11 +494,15 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
                   </div>
                   <button type="button" aria-expanded={editing} aria-controls={`entry-editor-${entry.id}`} onClick={() => setEditingId(editing ? null : entry.id)} className="shrink-0 rounded-lg border border-slate-700 px-3 py-1 text-xs font-semibold text-sky-300">{editing ? 'Terminer' : 'Modifier'}</button>
                 </div>
+                <div id={`move-${entry.id}`} hidden={reorderId !== entry.id} className="entry-move-controls flex items-center justify-end gap-2 mt-1">
+                  <button type="button" onClick={() => moveEntry(entry.id, -1)} disabled={idx === 0} aria-label={`Monter ${entry.label}`} className="rounded-lg border border-slate-700 px-3 text-xs text-slate-200 disabled:opacity-30">↑ Monter</button>
+                  <button type="button" onClick={() => moveEntry(entry.id, 1)} disabled={idx === entries.length - 1} aria-label={`Descendre ${entry.label}`} className="rounded-lg border border-slate-700 px-3 text-xs text-slate-200 disabled:opacity-30">↓ Descendre</button>
+                </div>
                 <div id={`entry-editor-${entry.id}`} hidden={!editing} className="mt-2 pt-2 border-t border-slate-800">
                 <div className="cumul-entry-row flex flex-col sm:flex-row sm:items-center gap-3">
                   {/* Drag handle + Row number */}
                   <div className="entry-index flex items-center gap-2 shrink-0">
-                    {allowDrag && <GripVertical className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />}
+                    {/* The reorder grip remains in the summary. */}
                     <span
                       className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${
                         entry.isBreak
@@ -540,8 +606,6 @@ export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag =
 
                   {/* Reorder and delete controls */}
                   <div className="entry-actions flex items-center gap-1 shrink-0">
-                    <button type="button" onClick={() => moveEntry(idx, -1)} disabled={idx === 0} aria-label={`Monter ${entry.label}`} title="Monter" className="rounded-lg border border-slate-700 text-slate-300 px-2 py-1 disabled:opacity-30">↑</button>
-                    <button type="button" onClick={() => moveEntry(idx, 1)} disabled={idx === entries.length - 1} aria-label={`Descendre ${entry.label}`} title="Descendre" className="rounded-lg border border-slate-700 text-slate-300 px-2 py-1 disabled:opacity-30">↓</button>
                   <button
                     onClick={() => handleRemoveEntry(entry.id)}
                     className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
