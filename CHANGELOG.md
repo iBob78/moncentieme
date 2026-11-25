@@ -4,6 +4,8 @@ Ce journal décrit les évolutions versionnées. Le statut de déploiement est �
 
 ## En préparation — optimisation smartphone (25 novembre 2026)
 
+- Pied de page minimal : deux liens juridiques, suppression des badges et descriptions redondantes, réduction des marges ; toutes les informations restent accessibles.
+
 - Cumul : affichage centésimal à deux décimales (ajustement après retour utilisateur), précision interne conservée. Découpage automatique des activités en conflit (pauses prioritaires puis départ le plus tardif), reprise dans les créneaux libres, copie des segments et absence de double déduction des pauses horodatées. Régression Harmo 09:20–11:30 puis 12:00–12:32.
 - Réorganisation directement dans les lignes compactes du cumul : poignée tactile pour glisser, flèches à la demande, glisser-déposer souris conservé. Test de régression sur le déplacement de pause, sans modification du total ni des horaires.
 - Densité mobile revue après retour utilisateur : deux cadrans côte à côte, lecture numérique compacte ; cumul en mode lecture avec édition à la demande, horaires de journée et ajout repliables. Les données et calculs restent identiques.
