@@ -102,8 +102,8 @@ test('découpage Harmo : pause de 11:30 à 12:00, reprise et durée conservée',
   assert.equal(calculateCumulPauseDeduction(entries,null,null),0);
   assert.equal(calculateNetHours(0,[2.7],[calculateCumulPauseDeduction(entries,null,null)]),2.7);
   assert.equal(calculateCumulPauseDeduction(entries,9*3600,13*60),0.5);
-  assert.equal(formatCumulDecimal(9+20/60),'9,3');
-  assert.equal(formatCumulDecimal(12+32/60),'12,5');
+  assert.equal(formatCumulDecimal(9+20/60),'9,33');
+  assert.equal(formatCumulDecimal(12+32/60),'12,53');
   assert.deepEqual(scheduleCumulEntries([entries[0]]).get('h'),[{start:33600,end:43320}]);
 });
 test('conflits entre activités, pauses chevauchantes et passage de minuit', () => {
@@ -120,4 +120,11 @@ test('conflits entre activités, pauses chevauchantes et passage de minuit', () 
   const equal = scheduleCumulEntries([{id:'first',start:0,duration:1},{id:'second',start:0,duration:1}]);
   assert.deepEqual(equal.get('second'),[{start:3600,end:7200}]);
   assert.equal(calculateCumulPauseDeduction([{id:'p',start:null,duration:0.5,isBreak:true}],null,null),0.5);
+});
+
+test('affichage du cumul à deux décimales fixes', () => {
+  assert.equal(formatCumulDecimal(2.7), '2,70');
+  assert.equal(formatCumulDecimal(12), '12,00');
+  assert.equal(formatCumulDecimal(11.5), '11,50');
+  assert.equal(formatCumulDecimal(0), '0,00');
 });

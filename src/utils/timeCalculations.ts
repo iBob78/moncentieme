@@ -240,9 +240,9 @@ export function reorderEntries<T>(items: T[], from: number, to: number): T[] {
   return next;
 }
 
-/** Presentation only: one decimal in French; never use this to reconstruct a time. */
+/** Presentation only: two decimals in French; never use this to reconstruct a time. */
 export function formatCumulDecimal(hours: number): string {
-  return hours.toFixed(1).replace('.', ',');
+  return hours.toFixed(2).replace('.', ',');
 }
 
 export interface CumulSlot { start: number; end: number }
