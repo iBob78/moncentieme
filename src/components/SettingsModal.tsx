@@ -21,8 +21,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const themes: ClockTheme[] = ['modern', 'industrial', 'minimal', 'dark-luxury'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl text-slate-200">
+    <div className="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div className="modal-content relative w-full max-w-lg max-h-[90dvh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl text-slate-200">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">

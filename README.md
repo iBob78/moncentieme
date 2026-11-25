@@ -16,7 +16,7 @@ Une heure contient 100 centièmes, soit 36 secondes par centième. Formule : heu
 ## Fonctionnalités
 
 - Horloges analogiques et numériques synchronisées sur l'heure locale, thèmes, précision, son et format configurables.
-- Convertisseur dans les deux sens, virgule ou point pour les décimales.
+- Convertisseur compact dans les deux sens : heures et minutes côte à côte, résultat au centième à deux décimales, conversion inverse arrondie à la minute la plus proche. Virgule ou point acceptés ; pas de secondes, exemples ni détails de calcul dans le module (aide séparée).
 - Cumul : début (référence) au choix en heure normale (07:30) ou centième (7,50), équivalence instantanée, fin facultative en heure normale, ajouts et pauses, modification des lignes, copie. Changer d'unité préserve l'horaire à la seconde près ; une saisie décimale est convertie à la seconde la plus proche. Exemple : 0,50 h ou 0:30 selon le mode.
   Chaque ligne d'activité ou de pause possède aussi son propre départ facultatif en heure normale ou décimale, modifiable après ajout. La fin est calculée automatiquement (J+1 si passage de minuit), sans modifier le cumul des durées. Exemple : Harmo, 2,70 h, départ 07:30 (7,50) → fin 10:12 (10,20).
 - Pointage : périodes travaillées et estimation brute au taux horaire. Les périodes qui se chevauchent sont additionnées, sans majoration ni règle fiscale ou conventionnelle.
@@ -32,7 +32,20 @@ Passage de minuit pris en charge pour une période unique ; début = fin donne z
 3. Renseigner 07:30 ou 7,50 : la fin apparaît automatiquement à 10:12 / 10,20 h. La durée reste 2 h 42 min.
 4. Modifier le départ ou la durée : la fin se recalcule. Si elle dépasse minuit, J+1 (ou davantage) est affiché.
 
-Le départ d'une activité est facultatif et indépendant du début de journée. Les horaires de ligne ne s'ajoutent jamais au total des durées. Ils figurent dans le récapitulatif copié lorsqu'ils sont renseignés.
+Le départ d'une activité est facultatif et indépendant du début de journée. Les horaires de ligne ne s'ajoutent jamais au total des durées. Les résultats centésimaux du cumul sont affichés à deux décimales (virgule), sans modifier les calculs à la seconde ni la précision des champs d'édition.
+
+Les pauses horodatées sont prioritaires et restent fixes. Une activité commençant plus tard interrompt une activité antérieure ; en cas de départ identique, l'ordre des lignes départage. Le travail interrompu reprend au premier créneau libre, en conservant sa durée. Les créneaux dérivés restent dans la même ligne et le récapitulatif copié ; la suppression d'une pause recalcule le planning. Exemple : Harmo 2,70 h à 09:20, pause 11:30–12:00 : Harmo 09:20–11:30 puis 12:00–12:32. Les pauses ne sont pas déduites deux fois du travail horodaté : sans fin de journée elles interrompent le planning, mais ne réduisent pas les durées nettes des activités horodatées. Avec une période de journée explicite, seule la portion des pauses horodatées dans cette période est déduite, sans double déduction des chevauchements. Les pauses sans horaire restent déduites comme auparavant. Sans période ni travail horodaté, les pauses horodatées restent déduites. Une journée explicitement nocturne place les départs antérieurs à son début au lendemain ; sans cette indication, les départs sont du même jour.
+
+## Interface smartphone et ordinateur
+
+L'application adapte automatiquement sa présentation à la largeur disponible et au type de pointeur détectés par les media queries du navigateur (sans analyse du user-agent ni collecte de données). Le mode compact s'active sous 1024 px ; la navigation se réorganise sous 1280 px et les cartes deviennent compactes sous 768 px. La détection se met à jour en cas de redimensionnement ou de rotation. Les appareils tactiles disposent de cibles de 44 px, de champs à 16 px et de claviers décimaux pour les valeurs en centièmes. Les activités se réordonnent avec les flèches monter/descendre, sans dépendre du glisser-déposer. Les dialogues tiennent compte de la hauteur de fenêtre et des zones sûres de l'écran. Le zoom navigateur reste autorisé.
+
+Contrôles manuels recommandés : 320, 360, 390, 430, 768, 1024 et 1440 px, portrait/paysage, clavier ouvert, navigation, cumul Harmo et réorganisation tactile ; vérifier Safari iOS et Chrome Android sur appareils réels.
+
+### Vue compacte
+Le pied de page se limite aux liens Mentions légales et Confidentialité. Les CGU, cookies et informations de confiance restent accessibles dans le même dialogue ; aide et réglages restent dans l'en-tête.
+
+Sur smartphone, les deux cadrans de l'accueil restent côte à côte, avec les heures numériques et la copie. Le convertisseur reste accessible dans son onglet dédié ; les explications dans l'aide. Dans le cumul, les activités sont affichées en lecture compacte (libellé, durée dans les deux unités, départ et fin) ; « Modifier » ouvre les champs de la ligne et « Terminer » les replie. Les modifications sont appliquées immédiatement. Les horaires de journée et le formulaire d'ajout sont également repliables. La poignée de déplacement est accessible directement sur chaque ligne : glisser verticalement avec le doigt ou la souris, ou toucher/activer la poignée pour afficher les flèches Monter et Descendre. La suppression reste dans l'éditeur. Le déplacement change l'ordre des lignes sans modifier les horaires saisis ; en cas de départs identiques il détermine la priorité du découpage.
 
 ## Développement
 
@@ -88,7 +101,7 @@ Importer le dépôt, choisir Vite, commande npm run build, sortie dist. Vérifie
 
 ## Historique et état des validations
 
-Consulter [CHANGELOG.md](CHANGELOG.md) pour les changements, les preuves de validation et les points restant à traiter. Le premier contrôle GitHub Actions du 25 novembre 2026 a réussi sur le commit `08a0fb3` ([rapport](https://github.com/iBob78/moncentieme/actions/runs/45576478244)). La version fonctionnelle `2e7675f` a également réussi tous les contrôles ([rapport CI](https://github.com/iBob78/moncentieme/actions/runs/45582479366)) et son aperçu Vercel a été accepté par le propriétaire le 25 novembre 2026 pour le cumul par activité. Les commits suivants doivent être vérifiés dans Actions.
+Consulter [CHANGELOG.md](CHANGELOG.md) pour les changements, les preuves de validation et les points restant à traiter. Le premier contrôle GitHub Actions du 25 novembre 2026 a réussi sur le commit `08a0fb3` ([rapport](https://github.com/iBob78/moncentieme/actions/runs/45576478244)). La version fonctionnelle `2e7675f` a également réussi tous les contrôles ([rapport CI](https://github.com/iBob78/moncentieme/actions/runs/45582479366)) et son aperçu Vercel a été accepté par le propriétaire le 25 novembre 2026 pour le cumul par activité. La refonte mobile et le convertisseur compact ont été acceptés par le propriétaire le 25 novembre 2026. [CI du commit fonctionnel bef0c2a](https://github.com/iBob78/moncentieme/actions/runs/45595020071) et [Preview Vercel](https://vercel.com/moncentieme/moncentieme/8Ky8T6wmPZyWvrnA25h6hRbcGMWi) réussies. Les commits suivants doivent être vérifiés dans Actions. Cette acceptation ne remplace pas les essais exhaustifs sur appareils réels.
 
 ## Contribution
 

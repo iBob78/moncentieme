@@ -97,11 +97,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, initial
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      className="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="modal-pop relative w-full max-w-3xl max-h-[90vh] bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl text-slate-200 flex flex-col overflow-hidden"
+        className="modal-content modal-pop relative w-full max-w-3xl max-h-[90dvh] bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl text-slate-200 flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

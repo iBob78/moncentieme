@@ -144,12 +144,12 @@ export const AnalogClockCentesimal: React.FC<AnalogClockCentesimalProps> = ({
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center select-none">
+    <div className="relative max-w-full flex flex-col items-center select-none">
       <svg
         viewBox="0 0 300 300"
         width={size}
         height={size}
-        className="drop-shadow-2xl transition-all duration-300"
+        className="clock-svg max-w-full h-auto drop-shadow-2xl transition-all duration-300"
       >
         <defs>
           <radialGradient id="centesimalDialGradient" cx="50%" cy="50%" r="50%">

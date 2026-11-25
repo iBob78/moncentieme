@@ -55,3 +55,132 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.7);
 }
+
+/* Layout adapts to available space; input capabilities are independent of device labels. */
+.app-shell { min-height: 100dvh; }
+.nav-short { display: none; }
+.app-header { padding-top: max(0.5rem, env(safe-area-inset-top)); }
+.app-main, .app-footer { padding-left: max(0.5rem, env(safe-area-inset-left)); padding-right: max(0.5rem, env(safe-area-inset-right)); }
+.app-footer { margin-top: 0; padding-top: .125rem; padding-bottom: max(.125rem, env(safe-area-inset-bottom)); }
+.clock-svg { display: block; max-width: 100%; height: auto; }
+.app-shell button:focus-visible, .app-shell input:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.app-shell button:disabled { cursor: not-allowed; }
+
+@media (max-width: 1279px) {
+  .app-header-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .375rem .5rem; }
+  .app-brand { grid-column: 1; grid-row: 1; min-width: 0; gap: .5rem; }
+  .app-tools { grid-column: 2; grid-row: 1; justify-content: flex-end; gap: .25rem; }
+  .app-nav { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; }
+  .app-nav button { justify-content: center; min-width: 0; padding-inline: .25rem; }
+  .app-live, .app-legal-button { display: none; }
+}
+
+@media (max-width: 767px) {
+  .app-header { padding: max(.375rem, env(safe-area-inset-top)) max(.5rem, env(safe-area-inset-right)) .375rem max(.5rem, env(safe-area-inset-left)); backdrop-filter: none; background: #0a101e; }
+  .brand-icon { padding: .375rem; border-radius: .75rem; }
+  .brand-icon svg { width: 1rem; height: 1rem; }
+  .app-brand h1 { font-size: .9rem; line-height: 1.2; }
+  .app-nav { gap: .125rem; border-radius: .75rem; padding: .125rem; }
+  .app-nav button { display: flex; flex-direction: column; gap: .125rem; min-height: 44px; font-size: .65rem; line-height: 1.15; border-radius: .6rem; white-space: normal; }
+  .app-nav button svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+  .nav-full { display: none; }
+  .nav-short { display: inline; }
+  .app-tools button { min-width: 40px; min-height: 44px; display: flex; justify-content: center; align-items: center; padding: .375rem; }
+  .app-tools .app-legal-button { display: none; }
+  .app-mini-clock { gap: .5rem; }
+  .app-mini-clock > button { display: none; } /* Horloges reste accessible via la navigation. */
+  .app-mini-clock > div { flex: 1; justify-content: space-between; gap: .25rem; min-width: 0; }
+  .app-mini-clock .text-xl { font-size: clamp(1rem, 4.3vw, 1.25rem); }
+  .tool-panel { margin-block: .75rem; padding: .75rem; backdrop-filter: none; }
+  .tool-panel input { min-width: 0; max-width: 100%; }
+  .tool-panel button { min-width: 0; max-width: 100%; }
+  .clock-panel .clock-face { width: min(100%, 320px); }
+  .clock-panel .clock-face > div { width: 100%; }
+  .clock-panel .clock-svg { width: 100%; }
+  .clock-panel .grid { gap: 1rem; }
+  .cumul-entry-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem; grid-template-areas: "index label" "type unit" "value equivalent" "actions actions"; }
+  .entry-index { grid-area: index; }
+  .entry-label { grid-area: label; }
+  .entry-type { grid-area: type; justify-content: center; }
+  .entry-unit { grid-area: unit; }
+  .entry-unit button { flex: 1; }
+  .entry-value { grid-area: value; width: 100%; }
+  .entry-equivalent { grid-area: equivalent; min-width: 0; }
+  .entry-equivalent span { white-space: normal; overflow-wrap: anywhere; }
+  .entry-actions { grid-area: actions; justify-content: flex-end; }
+  .entry-actions button { min-width: 44px; }
+  .cumul-add-row { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .cumul-add-row > * { width: 100%; min-width: 0; }
+  .cumul-add-row > div > button { flex: 1; justify-content: center; }
+  .cumul-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .cumul-totals > div { min-width: 0; gap: .375rem; flex-wrap: wrap; }
+  .cumul-totals .text-3xl, .cumul-totals .text-2xl { font-size: clamp(1.05rem, 4.8vw, 1.5rem); overflow-wrap: anywhere; }
+  .payroll-times { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .payroll-times input { width: 100%; }
+  .app-modal { padding: max(.5rem, env(safe-area-inset-top)) max(.5rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left)); }
+  .app-modal .modal-content { max-height: calc(100dvh - max(.5rem, env(safe-area-inset-top)) - max(.5rem, env(safe-area-inset-bottom))); padding: .875rem; border-radius: 1rem; }
+  .app-footer { margin-top: 0; }
+}
+
+@media (pointer: coarse) {
+  .app-shell button { min-height: 44px; touch-action: manipulation; }
+  .app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), .app-shell select, .app-shell textarea { font-size: 16px; min-height: 44px; }
+  .app-shell .entry-actions button { min-width: 44px; }
+}
+@media (max-height: 480px) { .app-header { position: relative; } }
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *, .app-shell *::before, .app-shell *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Compact overview: controls appear on demand, without changing stored values. */
+.clock-short-name { display: none; }
+.cumul-heading h2 { font-size: 1.05rem; }
+.entry-summary { min-height: 44px; }
+.entry-summary button, .cumul-day button { min-height: 44px; }
+.cumul-panel [hidden] { display: none !important; }
+@media (max-width: 767px) {
+  .app-header { position: relative; }
+  .app-main { padding-top: .5rem; }
+  .app-main > :not([hidden]) ~ :not([hidden]) { margin-top: .5rem; }
+  .clock-panel .clock-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .375rem; }
+  .clock-card { padding: .375rem; border-radius: .75rem; box-shadow: none; backdrop-filter: none; }
+  .clock-heading { justify-content: center; margin-bottom: .25rem; }
+  .clock-heading > span, .clock-heading > div > div:first-child, .clock-heading p, .clock-heading button, .clock-full-name { display: none; }
+  .clock-short-name { display: inline; }
+  .clock-heading h2 { font-size: .8rem; line-height: 1.2; }
+  .clock-dial { margin-block: .125rem; }
+  .clock-panel .clock-face { padding: .2rem; box-shadow: none; }
+  .clock-readout { margin-top: .25rem; padding: .25rem; border-radius: .5rem; }
+  .clock-readout > span, .clock-copy-row > span, .clock-footnote { display: none; }
+  .clock-digits { flex-wrap: wrap; justify-content: center; gap: .125rem; }
+  .clock-digits .font-mono-digits { font-size: clamp(.9rem, 4.5vw, 1.75rem); line-height: 1.2; }
+  .clock-digits > span:not(.font-mono-digits) { font-size: .65rem; }
+  .clock-copy-row { margin-top: 0; }
+  .clock-copy-row button { justify-content: center; min-height: 44px; }
+  .home-converter { display: none; }
+  .cumul-panel { padding: .5rem; margin-block: .5rem; }
+  .cumul-heading > div { gap: .375rem; }
+  .cumul-heading > div > div:first-child, .cumul-intro, .cumul-legend { display: none; }
+  .cumul-heading h2 { font-size: .95rem; }
+  .entry-summary { gap: .375rem; }
+  .entry-summary button { padding-inline: .5rem; }
+  .cumul-total-banner { padding: .5rem; }
+  .cumul-totals > div:first-child { display: none; } /* Duplicate of net duration. */
+  .cumul-totals { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .375rem; }
+  .cumul-totals > div > div:first-child { display: none; }
+  .cumul-totals > div > div:last-child > span { font-size: .58rem; }
+  .cumul-totals .text-3xl, .cumul-totals .text-2xl { font-size: clamp(.8rem, 3.8vw, 1.25rem); }
+}
+
+/* A single dedicated grip keeps the overview dense. Scrolling elsewhere is unchanged. */
+.entry-summary .entry-grip { width: 44px; min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; touch-action: none; cursor: grab; user-select: none; }
+.entry-grip:active { cursor: grabbing; }
+.entry-grip:disabled { opacity: .35; cursor: default; touch-action: auto; }
+.entry-move-controls button { min-height: 44px; }
+@media (max-width: 767px) {
+  .entry-summary .entry-grip { margin-left: -.375rem; }
+}
+
+/* Minimal legal footer; touch targets remain accessible without extra margins. */
+.app-footer button { min-height: 32px; padding-inline: .25rem; }
+@media (pointer: coarse) { .app-footer button { min-height: 44px; } }

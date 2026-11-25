@@ -67,7 +67,7 @@ ${rateNum > 0 ? `Montant total (${rateNum} €/h) : ${invalidInputs ? '—' : to
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto my-8 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
+    <div className="tool-panel w-full max-w-4xl mx-auto my-3 sm:my-8 p-3 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-6">
         <div className="flex items-center gap-3">
@@ -114,7 +114,7 @@ ${rateNum > 0 ? `Montant total (${rateNum} €/h) : ${invalidInputs ? '—' : to
             </div>
 
             {/* Start & End time */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="payroll-times flex items-center gap-2 w-full sm:w-auto">
               <div>
                 <label className="text-[10px] text-slate-500 uppercase font-semibold block mb-1">
                   Début
@@ -218,6 +218,7 @@ ${rateNum > 0 ? `Montant total (${rateNum} €/h) : ${invalidInputs ? '—' : to
               <input
                 type="text"
                 value={hourlyRate}
+                 inputMode="decimal"
                  aria-invalid={parsedRate === null}
                 onChange={(e) => setHourlyRate(e.target.value)}
                 className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-xs text-right font-mono text-white"

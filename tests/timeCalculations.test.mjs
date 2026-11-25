@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd } from '../src/utils/timeCalculations.ts';
+import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd, reorderEntries, formatCumulDecimal, scheduleCumulEntries, normalizeCumulStart, calculateCumulPauseDeduction, decimalHoursToMinutes } from '../src/utils/timeCalculations.ts';
 
 test('conversion et arrondi', () => {
   assert.equal(timeToCentesimal(13, 30), 13.5);
@@ -74,4 +74,67 @@ test('horaire de chaque activité : Harmo 2,70 h, équivalence et minuit', () =>
   assert.equal(calculateEntryEnd(-1, 2.7), null);
   assert.equal(calculateEntryEnd(27000, Infinity), null);
   assert.equal(calculateNetHours(0, [duration], []), 2.7);
+});
+
+test('réorganisation du cumul : déplacer une pause avant ou après une activité', () => {
+  const harmo = { id: 'h', value: 2.7, startRaw: '07:30', isBreak: false };
+  const pause = { id: 'p', value: 0.5, startRaw: '10:12', isBreak: true };
+  const reunion = { id: 'r', value: 1.5, startRaw: '10:42', isBreak: false };
+  const original = [harmo, pause, reunion];
+  const before = reorderEntries(original, 1, 0);
+  assert.deepEqual(before, [pause, harmo, reunion]);
+  assert.deepEqual(reorderEntries(before, 0, 2), [harmo, reunion, pause]);
+  assert.deepEqual(original, [harmo, pause, reunion]);
+  assert.strictEqual(before[0], pause);
+  assert.strictEqual(reorderEntries(original, 0, -1), original);
+  assert.strictEqual(reorderEntries(original, 2, 3), original);
+  assert.strictEqual(reorderEntries(original, 1, 1), original);
+  const total = entries => calculateNetHours(0, entries.filter(e => !e.isBreak).map(e => e.value), entries.filter(e => e.isBreak).map(e => e.value));
+  assert.equal(total(before), total(original));
+});
+
+test('découpage Harmo : pause de 11:30 à 12:00, reprise et durée conservée', () => {
+  const entries = [{id:'h',start:33600,duration:2.7},{id:'p',start:41400,duration:0.5,isBreak:true}];
+  const slots = scheduleCumulEntries(entries);
+  assert.deepEqual(slots.get('h'), [{start:33600,end:41400},{start:43200,end:45120}]);
+  assert.deepEqual(slots.get('p'), [{start:41400,end:43200}]);
+  assert.equal(slots.get('h').reduce((n,s)=>n+s.end-s.start,0),9720);
+  assert.equal(calculateCumulPauseDeduction(entries,null,null),0);
+  assert.equal(calculateNetHours(0,[2.7],[calculateCumulPauseDeduction(entries,null,null)]),2.7);
+  assert.equal(calculateCumulPauseDeduction(entries,9*3600,13*60),0.5);
+  assert.equal(formatCumulDecimal(9+20/60),'9,33');
+  assert.equal(formatCumulDecimal(12+32/60),'12,53');
+  assert.deepEqual(scheduleCumulEntries([entries[0]]).get('h'),[{start:33600,end:43320}]);
+});
+test('conflits entre activités, pauses chevauchantes et passage de minuit', () => {
+  const a = {id:'a',start:9*3600,duration:3};
+  const b = {id:'b',start:10*3600,duration:1};
+  const p = {id:'p',start:10.5*3600,duration:0.5,isBreak:true};
+  const q = {id:'q',start:10.75*3600,duration:0.5,isBreak:true};
+  const s = scheduleCumulEntries([a,b,p,q]);
+  assert.deepEqual(s.get('b'),[{start:36000,end:37800},{start:40500,end:42300}]);
+  assert.deepEqual(s.get('a'),[{start:32400,end:36000},{start:42300,end:49500}]);
+  assert.equal(calculateCumulPauseDeduction([a,b,p,q],9*3600,13*60),0.75);
+  const overnight = [{id:'n',start:23*3600,duration:2},{id:'p',start:normalizeCumulStart(0,23*3600,2*60),duration:0.5,isBreak:true}];
+  assert.deepEqual(scheduleCumulEntries(overnight).get('n'),[{start:82800,end:86400},{start:88200,end:91800}]);
+  const equal = scheduleCumulEntries([{id:'first',start:0,duration:1},{id:'second',start:0,duration:1}]);
+  assert.deepEqual(equal.get('second'),[{start:3600,end:7200}]);
+  assert.equal(calculateCumulPauseDeduction([{id:'p',start:null,duration:0.5,isBreak:true}],null,null),0.5);
+});
+
+test('affichage du cumul à deux décimales fixes', () => {
+  assert.equal(formatCumulDecimal(2.7), '2,70');
+  assert.equal(formatCumulDecimal(12), '12,00');
+  assert.equal(formatCumulDecimal(11.5), '11,50');
+  assert.equal(formatCumulDecimal(0), '0,00');
+});
+
+test('convertisseur compact : arrondi à la minute et retenue', () => {
+  assert.deepEqual(decimalHoursToMinutes(2.7), { hours: 2, minutes: 42 });
+  assert.deepEqual(decimalHoursToMinutes(9.33), { hours: 9, minutes: 20 });
+  assert.deepEqual(decimalHoursToMinutes(1.99), { hours: 1, minutes: 59 });
+  assert.deepEqual(decimalHoursToMinutes(1.999), { hours: 2, minutes: 0 });
+  assert.deepEqual(decimalHoursToMinutes(0.0083), { hours: 0, minutes: 0 });
+  assert.deepEqual(decimalHoursToMinutes(0.01), { hours: 0, minutes: 1 });
+  assert.deepEqual(decimalHoursToMinutes(35.5), { hours: 35, minutes: 30 });
 });

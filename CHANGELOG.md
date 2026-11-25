@@ -2,6 +2,32 @@
 
 Ce journal décrit les évolutions versionnées. Le statut de déploiement est à vérifier séparément sur Vercel.
 
+## Optimisation smartphone et cumul — 25 novembre 2026
+
+- Convertisseur simplifié : heures et minutes côte à côte, suppression des secondes, exemples et explications permanentes, résultat et copie compacts ; conversion inverse arrondie à la minute la plus proche avec tests de retenue.
+
+- Pied de page minimal : deux liens juridiques, suppression des badges et descriptions redondantes, réduction des marges ; toutes les informations restent accessibles.
+
+- Cumul : affichage centésimal à deux décimales (ajustement après retour utilisateur), précision interne conservée. Découpage automatique des activités en conflit (pauses prioritaires puis départ le plus tardif), reprise dans les créneaux libres, copie des segments et absence de double déduction des pauses horodatées. Régression Harmo 09:20–11:30 puis 12:00–12:32.
+- Réorganisation directement dans les lignes compactes du cumul : poignée tactile pour glisser, flèches à la demande, glisser-déposer souris conservé. Test de régression sur le déplacement de pause, sans modification du total ni des horaires.
+- Densité mobile revue après retour utilisateur : deux cadrans côte à côte, lecture numérique compacte ; cumul en mode lecture avec édition à la demande, horaires de journée et ajout repliables. Les données et calculs restent identiques.
+- Détection réactive de la largeur, du pointeur principal et de la préférence de mouvement, sans identification du navigateur ni transmission de données.
+- En-tête compact, cinq onglets visibles sans défilement horizontal, zones tactiles agrandies, champs à 16 px et clavier décimal.
+- Cartes cumul plus compactes, réorganisation par flèches accessible sur téléphone et ordinateur, cadrans redimensionnables, pointage et dialogues adaptés.
+- Le glisser-déposer reste disponible sur pointeur fin ; la conservation des saisies en mémoire reste inchangée.
+
+### Validation et traçabilité
+- `a3012be` : adaptation responsive et tactile.
+- `f304362` : cadrans côte à côte et édition à la demande.
+- `f2a0c2d` : déplacement des activités et pauses depuis la vue compacte.
+- `cf7a568` : découpage des activités en conflit.
+- `4af7730` : affichage centésimal à deux décimales.
+- `791f8cc` : pied de page minimal.
+- `bef0c2a` : convertisseur compact.
+- [CI complète réussie](https://github.com/iBob78/moncentieme/actions/runs/45595020071) pour `bef0c2a6c7c3c581c68e52e2285c21751d32a65c` : installation, tests, TypeScript, build et vérification de la sortie.
+- [Preview Vercel réussie](https://vercel.com/moncentieme/moncentieme/8Ky8T6wmPZyWvrnA25h6hRbcGMWi). Le propriétaire a accepté la version et autorisé sa fusion le 25 novembre 2026.
+- [Pull request nº2](https://github.com/iBob78/moncentieme/pull/2). Les essais visuels exhaustifs sur appareils réels, l'export ZIP en exécution, les mentions légales et la protection de main restent à vérifier. Les contrôles après fusion sont consultables dans Actions et Vercel.
+
 ## Maintenance — 25 novembre 2026
 
 ### Corrections métier

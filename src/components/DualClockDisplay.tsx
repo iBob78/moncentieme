@@ -57,21 +57,21 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
+    <div className="clock-panel w-full max-w-6xl mx-auto px-0 sm:px-4">
       {/* Grid of the two clocks side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+      <div className="clock-pair grid grid-cols-2 gap-2 sm:gap-4 lg:gap-8 items-stretch">
         
         {/* CLOCK 1: HORLOGE NORMALE / SEXAGÉSIMALE */}
-        <div className="relative group rounded-3xl p-6 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-sky-500/30">
+        <div className="clock-card min-w-0 relative group rounded-3xl p-3 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-sky-500/30">
           {/* Header pill */}
-          <div className="w-full flex items-center justify-between mb-4">
+          <div className="clock-heading w-full flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
-                  Horloge Normale
+                  <span className="clock-full-name">Horloge Normale</span><span className="clock-short-name">Normale</span>
                 </h2>
                 <p className="text-xs text-slate-400 font-medium">
                   Système Sexagésimal (Base 60)
@@ -84,19 +84,19 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
           </div>
 
           {/* Analog Dial */}
-          <div className="my-3 flex justify-center w-full">
-            <div className={`rounded-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
+          <div className="clock-dial my-3 flex justify-center w-full">
+            <div className={`clock-face rounded-full max-w-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
               <AnalogClockNormal time={time} settings={settings} size={280} />
             </div>
           </div>
 
           {/* Digital Time Readout */}
-          <div className="w-full mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 flex flex-col items-center">
+          <div className="clock-readout w-full mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 flex flex-col items-center">
             <span className="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-1">
               Affichage Numérique Classique
             </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-extrabold font-mono-digits text-white tracking-tight">
+            <div className="clock-digits flex items-baseline gap-2">
+              <span className="text-3xl sm:text-5xl font-extrabold font-mono-digits text-white tracking-tight">
                 {normalTimeDisplay}
               </span>
               {period && (
@@ -105,7 +105,7 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="clock-copy-row flex items-center gap-2 mt-2">
               <span className="text-xs text-slate-400 font-mono">
                 {String(time.hours).padStart(2, '0')}h {String(time.minutes).padStart(2, '0')}min {settings.showSeconds ? `${String(time.seconds).padStart(2, '0')}s` : ''}
               </span>
@@ -131,22 +131,22 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
           </div>
 
           {/* Educational footnote badge */}
-          <div className="w-full mt-4 text-[11px] text-slate-400 text-center bg-slate-950/40 py-2 px-3 rounded-lg border border-slate-800/50">
+          <div className="clock-footnote w-full mt-4 text-[11px] text-slate-400 text-center bg-slate-950/40 py-2 px-3 rounded-lg border border-slate-800/50">
             Cadran divisé en <strong className="text-slate-200">12 heures</strong> et <strong className="text-slate-200">60 minutes</strong> (6° par minute).
           </div>
         </div>
 
         {/* CLOCK 2: HORLOGE CENTÉSIMALE / BASE 100 */}
-        <div className="relative group rounded-3xl p-6 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-cyan-500/30">
+        <div className="clock-card min-w-0 relative group rounded-3xl p-3 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-cyan-500/30">
           {/* Header pill */}
-          <div className="w-full flex items-center justify-between mb-4">
+          <div className="clock-heading w-full flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-wide flex items-center gap-2">
-                  Horloge au Centième
+                  <span className="clock-full-name">Horloge au Centième</span><span className="clock-short-name">Centième</span>
                   <button
                     onClick={onOpenInfo}
                     className="p-0.5 text-cyan-400 hover:text-cyan-300 transition-colors"
@@ -166,26 +166,26 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
           </div>
 
           {/* Analog Dial Centesimal */}
-          <div className="my-3 flex justify-center w-full">
-            <div className={`rounded-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
+          <div className="clock-dial my-3 flex justify-center w-full">
+            <div className={`clock-face rounded-full max-w-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
               <AnalogClockCentesimal time={time} settings={settings} size={280} />
             </div>
           </div>
 
           {/* Digital Time Readout Centesimal */}
-          <div className="w-full mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 flex flex-col items-center">
+          <div className="clock-readout w-full mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 flex flex-col items-center">
             <span className="text-[11px] uppercase tracking-widest text-cyan-400 font-bold mb-1">
               Affichage Numérique en Centièmes
             </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-extrabold font-mono-digits text-cyan-400 tracking-tight">
+            <div className="clock-digits flex items-baseline gap-2">
+              <span className="text-3xl sm:text-5xl font-extrabold font-mono-digits text-cyan-400 tracking-tight">
                 {centesimalDisplay}
               </span>
               <span className="text-lg font-bold text-cyan-500/80 font-mono">
                 h
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="clock-copy-row flex items-center gap-2 mt-2">
               <span className="text-xs text-cyan-300/80 font-mono">
                 {time.hours} h et {((centesimalVal % 1) * 100).toFixed(settings.decimalPlaces === 2 ? 0 : 1)} centièmes
               </span>
@@ -211,7 +211,7 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
           </div>
 
           {/* Educational footnote badge */}
-          <div className="w-full mt-4 text-[11px] text-cyan-400/90 text-center bg-cyan-950/20 py-2 px-3 rounded-lg border border-cyan-800/30">
+          <div className="clock-footnote w-full mt-4 text-[11px] text-cyan-400/90 text-center bg-cyan-950/20 py-2 px-3 rounded-lg border border-cyan-800/30">
             Cadran gradué en <strong className="text-cyan-300">100 centièmes</strong> (3.6° par centième). Utilisé en Paie & RH.
           </div>
         </div>
