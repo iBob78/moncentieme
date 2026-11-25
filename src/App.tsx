@@ -9,6 +9,7 @@ import { DualStopwatch } from './components/DualStopwatch';
 import { EducationalModal } from './components/EducationalModal';
 import { SettingsModal } from './components/SettingsModal';
 import { LegalModal, LegalTab } from './components/LegalModal';
+import { formatCentesimalTime, timeToCentesimal } from './utils/timeCalculations';
 import { clockAudio } from './utils/audioTick';
 import {
   Clock,
@@ -64,7 +65,8 @@ export function App() {
   const lastSecondRef = useRef<number>(-1);
 
   useEffect(() => {
-    let animId: number;
+    let animId: number | undefined;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
 
     const loop = () => {
       const now = new Date();
@@ -82,12 +84,15 @@ export function App() {
         lastSecondRef.current = s;
       }
 
-      animId = requestAnimationFrame(loop);
+      if (activeTab === 'clocks' && settings.sweep === 'smooth') animId = requestAnimationFrame(loop);
+      else timerId = setTimeout(loop, 1000 - now.getMilliseconds());
     };
-
-    animId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(animId);
-  }, [settings.soundEnabled]);
+    loop();
+    return () => {
+      if (animId !== undefined) cancelAnimationFrame(animId);
+      if (timerId !== undefined) clearTimeout(timerId);
+    };
+  }, [activeTab, settings.soundEnabled, settings.sweep]);
 
   const updateSettings = useCallback((newSettings: Partial<ClockSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
@@ -223,17 +228,15 @@ export function App() {
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:py-8 space-y-8">
-        {activeTab === 'clocks' ? (
-          <>
+        <div hidden={activeTab !== 'clocks'}>
             <DualClockDisplay
               time={time}
               settings={settings}
               onOpenInfo={() => setIsInfoOpen(true)}
             />
 
-            <ConverterTool />
-          </>
-        ) : (
+        </div>
+        {activeTab !== 'clocks' && (
           <>
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-6">
@@ -253,7 +256,7 @@ export function App() {
                     Heure au Centième
                   </span>
                   <span className="text-xl sm:text-2xl font-bold font-mono text-cyan-300">
-                    {(time.hours + time.minutes / 60 + time.seconds / 3600).toFixed(settings.decimalPlaces)} h
+                    {formatCentesimalTime(timeToCentesimal(time.hours, time.minutes, time.seconds), settings.decimalPlaces, settings.decimalSeparator)} h
                   </span>
                 </div>
               </div>
@@ -266,12 +269,12 @@ export function App() {
               </button>
             </div>
 
-            {activeTab === 'converter' && <ConverterTool />}
-            {activeTab === 'cumul' && <CumulCalculator />}
-            {activeTab === 'payroll' && <PayrollTimesheetCalculator />}
-            {activeTab === 'stopwatch' && <DualStopwatch />}
           </>
         )}
+        <div hidden={activeTab !== 'clocks' && activeTab !== 'converter'}><ConverterTool /></div>
+        <div hidden={activeTab !== 'cumul'}><CumulCalculator /></div>
+        <div hidden={activeTab !== 'payroll'}><PayrollTimesheetCalculator /></div>
+        <div hidden={activeTab !== 'stopwatch'}><DualStopwatch /></div>
       </main>
 
       <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950/90 py-8 px-4 text-xs text-slate-400 mt-12">

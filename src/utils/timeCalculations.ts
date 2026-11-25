@@ -136,15 +136,9 @@ export function calculateDuration(startTime: string, endTime: string): {
     return { minutesTotal: 0, hours: 0, minutes: 0, centesimalHours: 0 };
   }
 
-  const [startH, startM] = startTime.split(':').map(Number);
-  const [endH, endM] = endTime.split(':').map(Number);
-
-  if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
-    return { minutesTotal: 0, hours: 0, minutes: 0, centesimalHours: 0 };
-  }
-
-  let totalMStart = startH * 60 + startM;
-  let totalMEnd = endH * 60 + endM;
+  const totalMStart = parseTimeOfDay(startTime);
+  let totalMEnd = parseTimeOfDay(endTime);
+  if (totalMStart === null || totalMEnd === null) return { minutesTotal: 0, hours: 0, minutes: 0, centesimalHours: 0 };
 
   if (totalMEnd < totalMStart) {
     // Crosses midnight
@@ -162,4 +156,35 @@ export function calculateDuration(startTime: string, endTime: string): {
     minutes,
     centesimalHours,
   };
+}
+
+/** Strict decimal hours, with either decimal separator. */
+export function parseNonNegativeDecimal(raw: string): number | null {
+  const value = raw.trim().replace(',', '.');
+  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n <= Number.MAX_SAFE_INTEGER / 3600 ? n : null;
+}
+
+/** Minutes since midnight; 24:00 is the only permitted hour 24. */
+export function parseTimeOfDay(raw: string): number | null {
+  const m = /^(\d{1,2})[:h,](\d{1,2})$/i.exec(raw.trim());
+  if (!m) return null;
+  const h = Number(m[1]), min = Number(m[2]);
+  return h > 24 || min >= 60 || (h === 24 && min !== 0) ? null : h * 60 + min;
+}
+
+export function parseDurationInput(raw: string, unit: 'c' | 'h'): number | null {
+  if (unit === 'h' && /[:h]/i.test(raw)) {
+    const m = /^(\d+)[:h](\d{1,2})(?::(\d{1,2}))?$/i.exec(raw.trim());
+    if (!m) return null;
+    const h = Number(m[1]), min = Number(m[2]), s = Number(m[3] ?? 0);
+    if (min >= 60 || s >= 60 || !Number.isSafeInteger(h * 3600 + min * 60 + s)) return null;
+    return timeToCentesimal(h, min, s);
+  }
+  return parseNonNegativeDecimal(raw);
+}
+
+export function calculateNetHours(base: number, additions: number[], breaks: number[]): number {
+  return Math.max(0, base + additions.reduce((sum, n) => sum + n, 0) - breaks.reduce((sum, n) => sum + n, 0));
 }

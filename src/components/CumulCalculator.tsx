@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { centesimalToSexagesimal } from '../utils/timeCalculations';
+import { centesimalToSexagesimal, parseTimeOfDay, parseDurationInput, calculateNetHours } from '../utils/timeCalculations';
 import { Plus, Trash2, Clock, Cpu, RotateCcw, Copy, Check, GripVertical, ArrowRight, Flag, Timer, Coffee } from 'lucide-react';
 
 type EntryUnit = 'c' | 'h';
@@ -14,32 +14,8 @@ interface CumulEntry {
 }
 
 function parseTimeInput(raw: string): number | null {
-  // Parses "7:30", "07:30", "7h30" into centesimal hours (e.g. 7.50)
-  const cleaned = raw.trim().replace('h', ':').replace(',', ':');
-  if (!cleaned || !cleaned.includes(':')) return null;
-  const parts = cleaned.split(':').map(Number);
-  if (parts.some(isNaN)) return null;
-  const [h, m = 0] = parts;
-  if (h < 0 || h > 24 || m < 0 || m >= 60) return null;
-  return h + m / 60;
-}
-
-function parseDurationInput(raw: string, unit: EntryUnit): number | null {
-  const cleaned = raw.trim().replace(',', '.');
-  if (unit === 'c') {
-    // centesimal: "7.33" = 7h33c
-    const parsed = parseFloat(cleaned);
-    return isNaN(parsed) ? null : parsed;
-  }
-  // sexagesimal: "1:30" = 1h30m, or "1.5" = 1h30m
-  if (cleaned.includes(':')) {
-    const parts = cleaned.split(':').map(Number);
-    if (parts.some(isNaN)) return null;
-    const [h, m = 0, s = 0] = parts;
-    return h + m / 60 + s / 3600;
-  }
-  const parsed = parseFloat(cleaned);
-  return isNaN(parsed) ? null : parsed;
+  const minutes = parseTimeOfDay(raw);
+  return minutes === null ? null : minutes / 60;
 }
 
 function formatSexagesimalDisplay(value: number): string {
@@ -99,7 +75,8 @@ export const CumulCalculator: React.FC = () => {
     .reduce((acc, e) => acc + e.value, 0);
 
   // Total final = durée (fin-début) + ajouts - pauses
-  const totalCentesimal = Math.max(0, totalWorkHours + addedDuration - totalBreaks);
+  const totalCentesimal = calculateNetHours(totalWorkHours, [addedDuration], [totalBreaks]);
+  const invalidTotal = parsedStart === null || (endTime.trim() !== '' && parsedEnd === null) || entries.some(e => parseDurationInput(e.valueRaw, e.unit) === null);
   const totalSexagesimal = centesimalToSexagesimal(totalCentesimal);
 
   // Heure de fin effective (si fin non renseignée, on calcule à partir du total)
@@ -136,7 +113,7 @@ export const CumulCalculator: React.FC = () => {
   };
 
   const handleUpdateValue = (id: string, raw: string) => {
-    setEntries(entries.map((e) => (e.id === id ? { ...e, valueRaw: raw } : e)));
+    setEntries(entries.map((e) => (e.id === id ? { ...e, valueRaw: raw, value: parseDurationInput(raw, e.unit) ?? 0 } : e)));
   };
 
   const handleUpdateLabel = (id: string, label: string) => {
@@ -144,7 +121,7 @@ export const CumulCalculator: React.FC = () => {
   };
 
   const handleUpdateUnit = (id: string, unit: EntryUnit) => {
-    setEntries(entries.map((e) => (e.id === id ? { ...e, unit, valueRaw: '' } : e)));
+    setEntries(entries.map((e) => (e.id === id ? { ...e, unit, valueRaw: parseDurationInput(e.valueRaw, e.unit) === null ? '' : String(e.value) } : e)));
   };
 
   const handleToggleBreak = (id: string) => {
@@ -161,6 +138,7 @@ export const CumulCalculator: React.FC = () => {
   };
 
   const handleCopyTotal = () => {
+    if (invalidTotal) return;
     const lines = [
       `Journée : ${formatTimeOfDay(parsedStart || 0)} → ${endTime ? formatTimeOfDay(parsedEnd || 0) : 'en cours'}`,
     ];
@@ -410,6 +388,7 @@ export const CumulCalculator: React.FC = () => {
                     <input
                       type="text"
                       value={entry.valueRaw}
+                       aria-invalid={parseDurationInput(entry.valueRaw, entry.unit) === null}
                       onChange={(e) => handleUpdateValue(entry.id, e.target.value)}
                       className={`w-24 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-sm font-mono font-bold text-right focus:outline-none ${
                         entry.isBreak
@@ -437,7 +416,7 @@ export const CumulCalculator: React.FC = () => {
                   <div className="flex items-center gap-1 shrink-0">
                     <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                     <span className="text-sm font-mono font-semibold text-white whitespace-nowrap">
-                      {formatSexagesimalDisplay(entry.value)}
+                      {parseDurationInput(entry.valueRaw, entry.unit) === null ? 'Saisie invalide' : formatSexagesimalDisplay(entry.value)}
                     </span>
                   </div>
 
@@ -580,7 +559,7 @@ export const CumulCalculator: React.FC = () => {
           {/* Add button */}
           <button
             onClick={handleAddEntry}
-            disabled={!newValue}
+            disabled={previewValue === null}
             className="flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md transition-all self-end"
           >
             <Plus className="w-4 h-4" />
@@ -589,6 +568,9 @@ export const CumulCalculator: React.FC = () => {
         </div>
       </div>
 
+      {newValue.trim() !== '' && previewValue === null && <p role="alert" className="text-sm text-rose-300">Durée invalide. Exemple : 0,50 ou 0:30.</p>}
+      {invalidTotal && <p role="alert" className="text-sm text-rose-300">Corrigez les horaires ou durées invalides ; le total est provisoire et ne peut pas être copié.</p>}
+      {!invalidTotal && totalBreaks > totalWorkHours + addedDuration && <p role="status" className="text-sm text-amber-300">Les pauses dépassent la durée disponible ; le total est ramené à zéro.</p>}
       {/* TOTAL BANNER */}
       <div className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/30 border border-violet-500/30 shadow-xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
@@ -675,6 +657,7 @@ export const CumulCalculator: React.FC = () => {
 
           <button
             onClick={handleCopyTotal}
+             disabled={invalidTotal}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
           >
             {copied ? (
