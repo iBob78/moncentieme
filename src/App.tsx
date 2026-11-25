@@ -28,7 +28,26 @@ import {
   Radio,
 } from 'lucide-react';
 
+// Responsive detection uses viewport and primary pointer, not a fragile user-agent string.
+function useDeviceLayout() {
+  const read = () => ({
+    compact: window.matchMedia('(max-width: 1023px)').matches,
+    touch: window.matchMedia('(pointer: coarse)').matches,
+    reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  });
+  const [layout, setLayout] = useState(read);
+  useEffect(() => {
+    const queries = ['(max-width: 1023px)', '(pointer: coarse)', '(prefers-reduced-motion: reduce)'].map(q => window.matchMedia(q));
+    const update = () => setLayout(read());
+    queries.forEach(q => q.addEventListener('change', update));
+    update();
+    return () => queries.forEach(q => q.removeEventListener('change', update));
+  }, []);
+  return layout;
+}
+
 export function App() {
+  const layout = useDeviceLayout();
   const [settings, setSettings] = useState<ClockSettings>({
     theme: 'modern',
     sweep: 'smooth',
@@ -84,7 +103,7 @@ export function App() {
         lastSecondRef.current = s;
       }
 
-      if (activeTab === 'clocks' && settings.sweep === 'smooth') animId = requestAnimationFrame(loop);
+      if (activeTab === 'clocks' && settings.sweep === 'smooth' && !layout.reducedMotion && !document.hidden) animId = requestAnimationFrame(loop);
       else timerId = setTimeout(loop, 1000 - now.getMilliseconds());
     };
     loop();
@@ -92,20 +111,20 @@ export function App() {
       if (animId !== undefined) cancelAnimationFrame(animId);
       if (timerId !== undefined) clearTimeout(timerId);
     };
-  }, [activeTab, settings.soundEnabled, settings.sweep]);
+  }, [activeTab, settings.soundEnabled, settings.sweep, layout.reducedMotion]);
 
   const updateSettings = useCallback((newSettings: Partial<ClockSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white">
+    <div className="app-shell min-h-screen bg-[#070b14] text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white" data-layout={layout.compact ? 'compact' : 'desktop'} data-input={layout.touch ? 'touch' : 'pointer'}>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-80 bg-gradient-to-b from-sky-600/10 via-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
 
-      <header className="relative z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 px-4 sm:px-6 py-3">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-lg shadow-sky-500/20">
+      <header className="app-header relative z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 px-4 sm:px-6 py-3">
+        <div className="app-header-inner max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
+          <div className="app-brand flex items-center gap-3">
+            <div className="brand-icon p-2.5 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-lg shadow-sky-500/20">
               <Clock className="w-5 h-5" />
             </div>
             <div>
@@ -115,9 +134,11 @@ export function App() {
             </div>
           </div>
 
-          <nav className="flex items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs overflow-x-auto max-w-full">
+          <nav aria-label="Navigation principale" className="app-nav flex items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs max-w-full">
             <button
-              onClick={() => setActiveTab('clocks')}
+              onClick={() => { setActiveTab('clocks'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              aria-current={activeTab === 'clocks' ? 'page' : undefined}
+              aria-label="Horloges"
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'clocks'
                   ? 'bg-sky-500 text-white shadow-md'
@@ -125,11 +146,13 @@ export function App() {
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Horloges</span>
+              <span className="nav-full">Horloges</span><span aria-hidden="true" className="nav-short">Horloges</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('converter')}
+              onClick={() => { setActiveTab('converter'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              aria-current={activeTab === 'converter' ? 'page' : undefined}
+              aria-label="Convertisseur"
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'converter'
                   ? 'bg-sky-500 text-white shadow-md'
@@ -137,11 +160,13 @@ export function App() {
               }`}
             >
               <Calculator className="w-3.5 h-3.5" />
-              <span>Convertisseur</span>
+              <span className="nav-full">Convertisseur</span><span aria-hidden="true" className="nav-short">Convert.</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('cumul')}
+              onClick={() => { setActiveTab('cumul'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              aria-current={activeTab === 'cumul' ? 'page' : undefined}
+              aria-label="Cumul"
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'cumul'
                   ? 'bg-sky-500 text-white shadow-md'
@@ -149,11 +174,13 @@ export function App() {
               }`}
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Cumul</span>
+              <span className="nav-full">Cumul</span><span aria-hidden="true" className="nav-short">Cumul</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('payroll')}
+              onClick={() => { setActiveTab('payroll'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              aria-current={activeTab === 'payroll' ? 'page' : undefined}
+              aria-label="Pointage RH"
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'payroll'
                   ? 'bg-sky-500 text-white shadow-md'
@@ -161,11 +188,13 @@ export function App() {
               }`}
             >
               <Briefcase className="w-3.5 h-3.5" />
-              <span>Pointage RH</span>
+              <span className="nav-full">Pointage RH</span><span aria-hidden="true" className="nav-short">Pointage</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('stopwatch')}
+              onClick={() => { setActiveTab('stopwatch'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              aria-current={activeTab === 'stopwatch' ? 'page' : undefined}
+              aria-label="Chronomètre"
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap ${
                 activeTab === 'stopwatch'
                   ? 'bg-sky-500 text-white shadow-md'
@@ -173,19 +202,19 @@ export function App() {
               }`}
             >
               <Timer className="w-3.5 h-3.5" />
-              <span>Chronomètre</span>
+              <span className="nav-full">Chronomètre</span><span aria-hidden="true" className="nav-short">Chrono</span>
             </button>
           </nav>
 
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-950/40 text-emerald-300 border border-emerald-500/30">
+          <div className="app-tools flex items-center gap-2">
+            <span className="app-live flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-950/40 text-emerald-300 border border-emerald-500/30">
               <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
               <span className="hidden sm:inline">Direct</span>
             </span>
 
             <button
               onClick={() => openLegal('mentions')}
-              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-emerald-300 border border-slate-800 transition-colors"
+              className="app-legal-button flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-emerald-300 border border-slate-800 transition-colors"
               title="Mentions légales, confidentialité & confiance"
               aria-label="Mentions légales, confidentialité et confiance"
             >
@@ -227,7 +256,7 @@ export function App() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:py-8 space-y-8">
+      <main className="app-main flex-1 max-w-7xl w-full mx-auto px-2 sm:px-4 py-3 sm:py-8 space-y-4 sm:space-y-8">
         <div hidden={activeTab !== 'clocks'}>
             <DualClockDisplay
               time={time}
@@ -238,8 +267,8 @@ export function App() {
         </div>
         {activeTab !== 'clocks' && (
           <>
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-6">
+            <div className="app-mini-clock p-3 sm:p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-6">
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-semibold block">
                     Heure Normale
@@ -272,12 +301,12 @@ export function App() {
           </>
         )}
         <div hidden={activeTab !== 'clocks' && activeTab !== 'converter'}><ConverterTool /></div>
-        <div hidden={activeTab !== 'cumul'}><CumulCalculator /></div>
+        <div hidden={activeTab !== 'cumul'}><CumulCalculator allowDrag={!layout.touch} /></div>
         <div hidden={activeTab !== 'payroll'}><PayrollTimesheetCalculator /></div>
         <div hidden={activeTab !== 'stopwatch'}><DualStopwatch /></div>
       </main>
 
-      <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950/90 py-8 px-4 text-xs text-slate-400 mt-12">
+      <footer className="app-footer relative z-10 border-t border-slate-800/80 bg-slate-950/90 py-8 px-4 text-xs text-slate-400 mt-12">
         <div className="max-w-6xl mx-auto space-y-5">
           {/* Trust badges */}
           <div className="flex flex-wrap items-center justify-center gap-2">

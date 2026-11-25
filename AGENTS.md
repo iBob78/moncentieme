@@ -22,6 +22,9 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 - Aucun compte, stockage persistant, traceur ou appel externe ajouté sans accord. Les saisies restent en mémoire vive. Ne pas promettre l'absence de journaux côté hébergeur.
 - Polices système ; interface française, responsive, accessible au clavier et erreurs explicites. Ne pas inventer les coordonnées légales.
 
+## Responsive et accessibilité
+Utiliser les media queries de largeur et de pointeur, pas le user-agent pour identifier un téléphone. Réagir aux changements de taille et de capacité tactile. Garder les cinq onglets accessibles sans défilement horizontal, les cibles tactiles d'au moins 44 px en hauteur, les champs tactiles à 16 px et le zoom activé. Prévoir une alternative clavier/tactile au glisser-déposer. Tester 320/360/390/430/768/1024/1440 px, orientation, clavier virtuel et dialogues. Respecter prefers-reduced-motion ; ne collecter aucune donnée d'appareil.
+
 ## Vérifications
 1. Node 22.18+ recommandé ; npm ci.
 2. npm test (ajouter une régression à chaque modification métier), npm run typecheck, npm run build.

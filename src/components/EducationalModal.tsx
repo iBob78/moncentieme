@@ -13,8 +13,8 @@ export const EducationalModal: React.FC<EducationalModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-3xl max-h-[90vh] bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 overflow-y-auto shadow-2xl text-slate-200">
+    <div className="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div className="modal-content relative w-full max-w-3xl max-h-[90dvh] bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 overflow-y-auto shadow-2xl text-slate-200">
         
         {/* Close Button */}
         <button

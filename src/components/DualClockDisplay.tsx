@@ -57,12 +57,12 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
+    <div className="clock-panel w-full max-w-6xl mx-auto px-0 sm:px-4">
       {/* Grid of the two clocks side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         
         {/* CLOCK 1: HORLOGE NORMALE / SEXAGÉSIMALE */}
-        <div className="relative group rounded-3xl p-6 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-sky-500/30">
+        <div className="relative group rounded-3xl p-3 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-sky-500/30">
           {/* Header pill */}
           <div className="w-full flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
 
           {/* Analog Dial */}
           <div className="my-3 flex justify-center w-full">
-            <div className={`rounded-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
+            <div className={`clock-face rounded-full max-w-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
               <AnalogClockNormal time={time} settings={settings} size={280} />
             </div>
           </div>
@@ -96,7 +96,7 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
               Affichage Numérique Classique
             </span>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-extrabold font-mono-digits text-white tracking-tight">
+              <span className="text-3xl sm:text-5xl font-extrabold font-mono-digits text-white tracking-tight">
                 {normalTimeDisplay}
               </span>
               {period && (
@@ -137,7 +137,7 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
         </div>
 
         {/* CLOCK 2: HORLOGE CENTÉSIMALE / BASE 100 */}
-        <div className="relative group rounded-3xl p-6 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-cyan-500/30">
+        <div className="relative group rounded-3xl p-3 sm:p-8 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col items-center justify-between transition-all duration-300 hover:border-cyan-500/30">
           {/* Header pill */}
           <div className="w-full flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -167,7 +167,7 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
 
           {/* Analog Dial Centesimal */}
           <div className="my-3 flex justify-center w-full">
-            <div className={`rounded-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
+            <div className={`clock-face rounded-full max-w-full p-2.5 bg-slate-950/80 border border-slate-800/80 ${colors.glowClass}`}>
               <AnalogClockCentesimal time={time} settings={settings} size={280} />
             </div>
           </div>
@@ -178,7 +178,7 @@ export const DualClockDisplay: React.FC<DualClockDisplayProps> = ({
               Affichage Numérique en Centièmes
             </span>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-extrabold font-mono-digits text-cyan-400 tracking-tight">
+              <span className="text-3xl sm:text-5xl font-extrabold font-mono-digits text-cyan-400 tracking-tight">
                 {centesimalDisplay}
               </span>
               <span className="text-lg font-bold text-cyan-500/80 font-mono">

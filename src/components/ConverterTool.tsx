@@ -35,7 +35,7 @@ export const ConverterTool: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto my-8 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
+    <div className="tool-panel w-full max-w-4xl mx-auto my-3 sm:my-8 p-3 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-6">
         <div className="flex items-center gap-3">
@@ -167,8 +167,8 @@ export const ConverterTool: React.FC = () => {
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
                   Résultat en Heures Centésimales (Décimales) :
                 </span>
-                <div className="flex items-baseline gap-3 mt-1">
-                  <span className="text-4xl sm:text-5xl font-extrabold font-mono-digits text-cyan-300">
+                <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                  <span className="text-3xl sm:text-5xl font-extrabold font-mono-digits text-cyan-300">
                     {centesimalResult.toFixed(2)}
                     <span className="text-2xl font-bold text-cyan-500 ml-1">h</span>
                   </span>
@@ -230,6 +230,7 @@ export const ConverterTool: React.FC = () => {
               <input
                 type="text"
                 value={inputDecimal}
+                 inputMode="decimal"
                  aria-invalid={validDecimal === null}
                 onChange={(e) => setInputDecimal(e.target.value)}
                 placeholder="13.50"
@@ -268,8 +269,8 @@ export const ConverterTool: React.FC = () => {
                 <span className="text-xs font-semibold text-sky-400 uppercase tracking-wider">
                   Résultat en Heures & Minutes Sexagésimales :
                 </span>
-                <div className="flex items-baseline gap-3 mt-1">
-                  <span className="text-4xl sm:text-5xl font-extrabold font-mono-digits text-white">
+                <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                  <span className="text-3xl sm:text-5xl font-extrabold font-mono-digits text-white">
                     {sexagesimalResult.hours}h {String(sexagesimalResult.minutes).padStart(2, '0')}m
                     {sexagesimalResult.seconds > 0 && (
                       <span className="text-xl text-slate-400 ml-2">

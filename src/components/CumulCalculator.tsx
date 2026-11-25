@@ -72,7 +72,7 @@ function formatTimeOfDay(value: number): string {
   return formatCumulStartTime(Math.round(value * 3600), 'h');
 }
 
-export const CumulCalculator: React.FC = () => {
+export const CumulCalculator: React.FC<{ allowDrag?: boolean }> = ({ allowDrag = true }) => {
   // === HEURE DE DÉPART (référence, NON additionnée) ===
   const [startTime, setStartTime] = useState<string>('07:30');
   const [startUnit, setStartUnit] = useState<EntryUnit>('h');
@@ -209,6 +209,17 @@ export const CumulCalculator: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Accessible reordering works with touch, keyboard and mouse.
+  const moveEntry = (index: number, direction: -1 | 1) => {
+    setEntries(prev => {
+      const next = index + direction;
+      if (index < 0 || index >= prev.length || next < 0 || next >= prev.length) return prev;
+      const reordered = [...prev];
+      [reordered[index], reordered[next]] = [reordered[next], reordered[index]];
+      return reordered;
+    });
+  };
+
   // Drag and drop
   const handleDragStart = (index: number) => setDraggingIndex(index);
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -237,7 +248,7 @@ export const CumulCalculator: React.FC = () => {
   const previewValue = newValue ? parseDurationInput(newValue, newUnit) : null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto my-8 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
+    <div className="tool-panel w-full max-w-4xl mx-auto my-3 sm:my-8 p-3 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-6">
         <div className="flex items-center gap-3">
@@ -376,12 +387,12 @@ export const CumulCalculator: React.FC = () => {
             return (
               <div
                 key={entry.id}
-                draggable
-                onDragStart={() => handleDragStart(idx)}
+                draggable={allowDrag}
+                onDragStart={() => { if (allowDrag) handleDragStart(idx); }}
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDrop={() => handleDrop(idx)}
                 onDragEnd={handleDragEnd}
-                className={`group p-3.5 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${
+                className={`group p-3 rounded-xl border transition-all ${allowDrag ? 'cursor-grab active:cursor-grabbing' : ''} ${
                   isDragging
                     ? 'bg-slate-900/90 border-violet-500/50 shadow-lg shadow-violet-500/10 opacity-60'
                     : isDragOver
@@ -391,10 +402,10 @@ export const CumulCalculator: React.FC = () => {
                     : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700'
                 }`}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="cumul-entry-row flex flex-col sm:flex-row sm:items-center gap-3">
                   {/* Drag handle + Row number */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <GripVertical className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+                  <div className="entry-index flex items-center gap-2 shrink-0">
+                    {allowDrag && <GripVertical className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />}
                     <span
                       className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${
                         entry.isBreak
@@ -407,8 +418,9 @@ export const CumulCalculator: React.FC = () => {
                   </div>
 
                   {/* Label input */}
-                  <div className="flex-1 min-w-0">
+                  <div className="entry-label flex-1 min-w-0">
                     <input
+                      aria-label={`Libellé activité ${idx + 1}`}
                       type="text"
                       value={entry.label}
                       onChange={(e) => handleUpdateLabel(entry.id, e.target.value)}
@@ -420,7 +432,8 @@ export const CumulCalculator: React.FC = () => {
                   {/* Pause toggle */}
                   <button
                     onClick={() => handleToggleBreak(entry.id)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors shrink-0 border ${
+                    aria-pressed={!!entry.isBreak}
+                    className={`entry-type flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors shrink-0 border ${
                       entry.isBreak
                         ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'
                         : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
@@ -432,9 +445,9 @@ export const CumulCalculator: React.FC = () => {
                   </button>
 
                   {/* Unit toggle */}
-                  <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0">
+                  <div className="entry-unit flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0" role="group" aria-label="Unité de durée">
                     <button
-                      onClick={() => handleUpdateUnit(entry.id, 'c')}
+                      onClick={() => handleUpdateUnit(entry.id, 'c')} aria-label="Durée en centièmes" aria-pressed={entry.unit === 'c'}
                       className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
                         entry.unit === 'c'
                           ? 'bg-cyan-500 text-slate-950'
@@ -444,7 +457,7 @@ export const CumulCalculator: React.FC = () => {
                       c
                     </button>
                     <button
-                      onClick={() => handleUpdateUnit(entry.id, 'h')}
+                      onClick={() => handleUpdateUnit(entry.id, 'h')} aria-label="Durée en heures" aria-pressed={entry.unit === 'h'}
                       className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
                         entry.unit === 'h'
                           ? 'bg-sky-500 text-white'
@@ -456,10 +469,12 @@ export const CumulCalculator: React.FC = () => {
                   </div>
 
                   {/* Value input */}
-                  <div className="relative w-full sm:w-28 shrink-0">
+                  <div className="entry-value relative w-full sm:w-28 shrink-0">
                     <input
                       type="text"
                       value={entry.valueRaw}
+                      aria-label={`Durée activité ${idx + 1}`}
+                      inputMode={entry.unit === 'c' ? 'decimal' : 'text'}
                        aria-invalid={parseDurationInput(entry.valueRaw, entry.unit) === null}
                       onChange={(e) => handleUpdateValue(entry.id, e.target.value)}
                       className={`w-full bg-slate-900 border border-slate-800 rounded-lg pl-2.5 pr-7 py-1 text-sm font-mono font-bold text-right focus:outline-none ${
@@ -485,21 +500,25 @@ export const CumulCalculator: React.FC = () => {
                   </div>
 
                   {/* Sexagesimal equivalent */}
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="entry-equivalent flex items-center gap-1 shrink-0">
                     <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                     <span className="text-sm font-mono font-semibold text-white whitespace-nowrap">
                       {parseDurationInput(entry.valueRaw, entry.unit) === null ? 'Saisie invalide' : formatSexagesimalDisplay(entry.value)}
                     </span>
                   </div>
 
-                  {/* Delete button */}
+                  {/* Reorder and delete controls */}
+                  <div className="entry-actions flex items-center gap-1 shrink-0">
+                    <button type="button" onClick={() => moveEntry(idx, -1)} disabled={idx === 0} aria-label={`Monter ${entry.label}`} title="Monter" className="rounded-lg border border-slate-700 text-slate-300 px-2 py-1 disabled:opacity-30">↑</button>
+                    <button type="button" onClick={() => moveEntry(idx, 1)} disabled={idx === entries.length - 1} aria-label={`Descendre ${entry.label}`} title="Descendre" className="rounded-lg border border-slate-700 text-slate-300 px-2 py-1 disabled:opacity-30">↓</button>
                   <button
                     onClick={() => handleRemoveEntry(entry.id)}
                     className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
-                    title="Supprimer cette ligne"
+                    title="Supprimer cette ligne" aria-label={`Supprimer ${entry.label}`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
+                  </div>
                 </div>
                 <EntrySchedule id={`entry-start-${entry.id}`} raw={entry.startRaw} unit={entry.startUnit}
                   duration={parseDurationInput(entry.valueRaw, entry.unit)}
@@ -522,7 +541,7 @@ export const CumulCalculator: React.FC = () => {
           Ajouter une durée ou une pause
         </span>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+        <div className="cumul-add-row flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
           {/* Type toggle: Duration vs Break */}
           <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
             <button
@@ -601,6 +620,7 @@ export const CumulCalculator: React.FC = () => {
               <input
                 type="text"
                 value={newValue}
+                inputMode={newUnit === 'c' ? 'decimal' : 'text'}
                 onChange={(e) => setNewValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={newUnit === 'c' ? '0.33' : '0:30'}
@@ -650,7 +670,7 @@ export const CumulCalculator: React.FC = () => {
       {!invalidTotal && totalBreaks > totalWorkHours + addedDuration && <p role="status" className="text-sm text-amber-300">Les pauses dépassent la durée disponible ; le total est ramené à zéro.</p>}
       {/* TOTAL BANNER */}
       <div className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/30 border border-violet-500/30 shadow-xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
+        <div className="cumul-totals grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
           {/* Duration of work */}
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-violet-500/20 text-violet-400">

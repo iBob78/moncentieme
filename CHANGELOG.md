@@ -2,6 +2,13 @@
 
 Ce journal décrit les évolutions versionnées. Le statut de déploiement est à vérifier séparément sur Vercel.
 
+## En préparation — optimisation smartphone (25 novembre 2026)
+
+- Détection réactive de la largeur, du pointeur principal et de la préférence de mouvement, sans identification du navigateur ni transmission de données.
+- En-tête compact, cinq onglets visibles sans défilement horizontal, zones tactiles agrandies, champs à 16 px et clavier décimal.
+- Cartes cumul plus compactes, réorganisation par flèches accessible sur téléphone et ordinateur, cadrans redimensionnables, pointage et dialogues adaptés.
+- Le glisser-déposer reste disponible sur pointeur fin ; les calculs et la conservation en mémoire restent inchangés. Validation CI et tests sur appareils réels à effectuer avant fusion.
+
 ## Maintenance — 25 novembre 2026
 
 ### Corrections métier

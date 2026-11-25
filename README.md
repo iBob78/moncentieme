@@ -34,6 +34,12 @@ Passage de minuit pris en charge pour une période unique ; début = fin donne z
 
 Le départ d'une activité est facultatif et indépendant du début de journée. Les horaires de ligne ne s'ajoutent jamais au total des durées. Ils figurent dans le récapitulatif copié lorsqu'ils sont renseignés.
 
+## Interface smartphone et ordinateur
+
+L'application adapte automatiquement sa présentation à la largeur disponible et au type de pointeur détectés par les media queries du navigateur (sans analyse du user-agent ni collecte de données). Le mode compact s'active sous 1024 px ; la navigation se réorganise sous 1280 px et les cartes deviennent compactes sous 768 px. La détection se met à jour en cas de redimensionnement ou de rotation. Les appareils tactiles disposent de cibles de 44 px, de champs à 16 px et de claviers décimaux pour les valeurs en centièmes. Les activités se réordonnent avec les flèches monter/descendre, sans dépendre du glisser-déposer. Les dialogues tiennent compte de la hauteur de fenêtre et des zones sûres de l'écran. Le zoom navigateur reste autorisé.
+
+Contrôles manuels recommandés : 320, 360, 390, 430, 768, 1024 et 1440 px, portrait/paysage, clavier ouvert, navigation, cumul Harmo et réorganisation tactile ; vérifier Safari iOS et Chrome Android sur appareils réels.
+
 ## Développement
 
 Node.js 22.18+ (LTS recommandé), npm et Git.
