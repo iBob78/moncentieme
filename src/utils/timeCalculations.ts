@@ -222,3 +222,11 @@ export function calculateCumulWorkHours(startSeconds: number | null, endMinutes:
   const difference = endMinutes * 60 - startSeconds;
   return (difference < 0 ? difference + 86400 : difference) / 3600;
 }
+
+/** Optional entry schedule: start time + duration, independent of the daily total. */
+export function calculateEntryEnd(startSeconds: number, durationHours: number): { seconds: number; daysLater: number } | null {
+  if (!Number.isInteger(startSeconds) || startSeconds < 0 || startSeconds > 86400 || !Number.isFinite(durationHours) || durationHours < 0) return null;
+  const total = startSeconds + Math.round(durationHours * 3600);
+  if (!Number.isSafeInteger(total)) return null;
+  return { seconds: total % 86400, daysLater: Math.floor(total / 86400) };
+}

@@ -18,6 +18,7 @@ Une heure contient 100 centièmes, soit 36 secondes par centième. Formule : heu
 - Horloges analogiques et numériques synchronisées sur l'heure locale, thèmes, précision, son et format configurables.
 - Convertisseur dans les deux sens, virgule ou point pour les décimales.
 - Cumul : début (référence) au choix en heure normale (07:30) ou centième (7,50), équivalence instantanée, fin facultative en heure normale, ajouts et pauses, modification des lignes, copie. Changer d'unité préserve l'horaire à la seconde près ; une saisie décimale est convertie à la seconde la plus proche. Exemple : 0,50 h ou 0:30 selon le mode.
+  Chaque ligne d'activité ou de pause possède aussi son propre départ facultatif en heure normale ou décimale, modifiable après ajout. La fin est calculée automatiquement (J+1 si passage de minuit), sans modifier le cumul des durées. Exemple : Harmo, 2,70 h, départ 07:30 (7,50) → fin 10:12 (10,20).
 - Pointage : périodes travaillées et estimation brute au taux horaire. Les périodes qui se chevauchent sont additionnées, sans majoration ni règle fiscale ou conventionnelle.
 - Chronomètre double unité, tours, pause et remise à zéro.
 - Informations pédagogiques, réglages et mentions légales.

@@ -15,6 +15,7 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 - Accepter virgule et point ; rejeter valeurs négatives, non finies, minutes/secondes >= 60 et saisies malformées.
 - Heure de journée distincte d'une durée : 24:00 seul horaire 24 valide. Fin antérieure au début = passage de minuit ; heures égales = zéro.
 - Cumul : (fin - début) + ajouts - pauses ; début seul = référence. Début saisissable en HH:MM[:SS] ou heures décimales (virgule/point), précision à la seconde. Le changement de mode doit conserver la seconde exacte (jusqu'à six décimales affichées). Fin toujours en HH:MM. Arrondir uniquement à l'affichage. Ne jamais copier un total connu invalide.
+- Chaque ligne du cumul peut porter un départ facultatif indépendant du début de journée ; son heure de fin est le départ + la durée, en deux formats et avec indication des jours suivants. Les horaires de ligne sont informatifs : ne jamais les additionner au cumul, ni modifier la durée d'une ligne lors du changement de son format de départ.
 - Paie : estimation brute, sans majorations ni règles conventionnelles implicites ; les périodes superposées sont additionnées.
 
 ## Confidentialité et interface

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours } from '../src/utils/timeCalculations.ts';
+import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd } from '../src/utils/timeCalculations.ts';
 
 test('conversion et arrondi', () => {
   assert.equal(timeToCentesimal(13, 30), 13.5);
@@ -57,4 +57,21 @@ test('durée brute avec départ décimal, minuit et pauses', () => {
   assert.equal(calculateCumulWorkHours(parseCumulStartTime('7,33', 'c'), 8 * 60), 0.67);
   assert.equal(calculateCumulWorkHours(null, 16 * 60), 0);
   assert.equal(calculateCumulWorkHours(27000, null), 0);
+});
+
+test('horaire de chaque activité : Harmo 2,70 h, équivalence et minuit', () => {
+  const duration = parseDurationInput('2.70', 'c');
+  assert.equal(duration, 2.7);
+  const start = parseCumulStartTime('07:30', 'h');
+  assert.equal(start, parseCumulStartTime('7,50', 'c'));
+  const end = calculateEntryEnd(start, duration);
+  assert.equal(formatCumulStartTime(end.seconds, 'h'), '10:12');
+  assert.equal(formatCumulStartTime(end.seconds, 'c'), '10,20');
+  assert.equal(end.daysLater, 0);
+  assert.deepEqual(calculateEntryEnd(parseCumulStartTime('23:30', 'h'), duration), { seconds: 7920, daysLater: 1 });
+  assert.deepEqual(calculateEntryEnd(0, 0), { seconds: 0, daysLater: 0 });
+  assert.equal(calculateEntryEnd(27000, -1), null);
+  assert.equal(calculateEntryEnd(-1, 2.7), null);
+  assert.equal(calculateEntryEnd(27000, Infinity), null);
+  assert.equal(calculateNetHours(0, [duration], []), 2.7);
 });
