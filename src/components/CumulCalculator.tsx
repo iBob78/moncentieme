@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { centesimalToSexagesimal } from '../utils/timeCalculations';
+import { centesimalToSexagesimal, parseTimeOfDay, parseDurationInput, calculateNetHours, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd } from '../utils/timeCalculations';
 import { Plus, Trash2, Clock, Cpu, RotateCcw, Copy, Check, GripVertical, ArrowRight, Flag, Timer, Coffee } from 'lucide-react';
 
 type EntryUnit = 'c' | 'h';
@@ -11,35 +11,52 @@ interface CumulEntry {
   valueRaw: string;
   unit: EntryUnit;
   isBreak?: boolean;
+  startRaw: string;
+  startUnit: EntryUnit;
+}
+
+function EntrySchedule({ id, raw, unit, duration, onChange }: {
+  id: string;
+  raw: string;
+  unit: EntryUnit;
+  duration: number | null;
+  onChange: (raw: string, unit: EntryUnit) => void;
+}) {
+  const start = parseCumulStartTime(raw, unit);
+  const invalid = raw.trim() !== '' && start === null;
+  const end = start !== null && duration !== null ? calculateEntryEnd(start, duration) : null;
+  const changeUnit = (next: EntryUnit) => {
+    if (next !== unit) onChange(start === null ? '' : formatCumulStartTime(start, next), next);
+  };
+  return (
+    <div className="mt-3 rounded-xl border border-violet-500/25 bg-slate-900/70 p-3">
+      <label htmlFor={id} className="block text-xs font-semibold text-violet-300 mb-2">Heure de début de cette activité (facultatif)</label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+        <div className="min-w-0">
+          <div role="group" aria-label="Format du début de cette activité" className="flex gap-1 rounded-lg bg-slate-950 p-1 mb-2">
+            <button type="button" aria-pressed={unit === 'h'} onClick={() => changeUnit('h')} className={`flex-1 rounded-md px-2 py-2 text-xs font-semibold ${unit === 'h' ? 'bg-sky-500 text-slate-950' : 'text-slate-300'}`}>Heure normale</button>
+            <button type="button" aria-pressed={unit === 'c'} onClick={() => changeUnit('c')} className={`flex-1 rounded-md px-2 py-2 text-xs font-semibold ${unit === 'c' ? 'bg-cyan-500 text-slate-950' : 'text-slate-300'}`}>Centième</button>
+          </div>
+          <input id={id} type="text" value={raw} inputMode={unit === 'c' ? 'decimal' : 'text'} placeholder={unit === 'h' ? 'Ex. 07:30' : 'Ex. 7,50'} aria-invalid={invalid} aria-describedby={id + '-equivalent'} onChange={e => onChange(e.target.value, unit)} className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-base font-mono text-white focus:outline-none focus:border-violet-400" />
+          <p id={id + '-equivalent'} className={`mt-1 text-xs ${invalid ? 'text-rose-300' : 'text-slate-400'}`} aria-live="polite">
+            {invalid ? 'Horaire invalide (entre 00:00 et 24:00).' : start !== null ? `= ${formatCumulStartTime(start, unit === 'h' ? 'c' : 'h')}${unit === 'h' ? ' h décimales' : ''}` : 'Renseignez le départ de cette activité.'}
+          </p>
+        </div>
+        <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 px-3 py-2" aria-live="polite">
+          <span className="block text-xs font-semibold text-cyan-300">Heure de fin calculée</span>
+          {end ? <>
+            <span className="block text-xl font-mono font-bold text-white">{formatCumulStartTime(end.seconds, 'h')}{end.daysLater > 0 && <span className="ml-1 text-xs text-amber-300">J+{end.daysLater}</span>}</span>
+            <span className="block text-xs text-cyan-300">{formatCumulStartTime(end.seconds, 'c')} h décimales</span>
+          </> : <span className="block text-sm text-slate-400">—</span>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function parseTimeInput(raw: string): number | null {
-  // Parses "7:30", "07:30", "7h30" into centesimal hours (e.g. 7.50)
-  const cleaned = raw.trim().replace('h', ':').replace(',', ':');
-  if (!cleaned || !cleaned.includes(':')) return null;
-  const parts = cleaned.split(':').map(Number);
-  if (parts.some(isNaN)) return null;
-  const [h, m = 0] = parts;
-  if (h < 0 || h > 24 || m < 0 || m >= 60) return null;
-  return h + m / 60;
-}
-
-function parseDurationInput(raw: string, unit: EntryUnit): number | null {
-  const cleaned = raw.trim().replace(',', '.');
-  if (unit === 'c') {
-    // centesimal: "7.33" = 7h33c
-    const parsed = parseFloat(cleaned);
-    return isNaN(parsed) ? null : parsed;
-  }
-  // sexagesimal: "1:30" = 1h30m, or "1.5" = 1h30m
-  if (cleaned.includes(':')) {
-    const parts = cleaned.split(':').map(Number);
-    if (parts.some(isNaN)) return null;
-    const [h, m = 0, s = 0] = parts;
-    return h + m / 60 + s / 3600;
-  }
-  const parsed = parseFloat(cleaned);
-  return isNaN(parsed) ? null : parsed;
+  const minutes = parseTimeOfDay(raw);
+  return minutes === null ? null : minutes / 60;
 }
 
 function formatSexagesimalDisplay(value: number): string {
@@ -52,17 +69,21 @@ function formatSexagesimalDisplay(value: number): string {
 }
 
 function formatTimeOfDay(value: number): string {
-  // value in centesimal hours (0-24) → "HH:MM"
-  const totalMin = Math.round(value * 60);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  return formatCumulStartTime(Math.round(value * 3600), 'h');
 }
 
 export const CumulCalculator: React.FC = () => {
   // === HEURE DE DÉPART (référence, NON additionnée) ===
   const [startTime, setStartTime] = useState<string>('07:30');
-  const parsedStart = parseTimeInput(startTime);
+  const [startUnit, setStartUnit] = useState<EntryUnit>('h');
+  const startSeconds = parseCumulStartTime(startTime, startUnit);
+  const parsedStart = startSeconds === null ? null : startSeconds / 3600;
+
+  const handleStartUnitChange = (unit: EntryUnit) => {
+    if (unit === startUnit) return;
+    setStartTime(startSeconds === null ? '' : formatCumulStartTime(startSeconds, unit));
+    setStartUnit(unit);
+  };
 
   // === HEURE DE FIN (optionnelle, pour calculer la durée totale) ===
   const [endTime, setEndTime] = useState<string>('');
@@ -74,6 +95,9 @@ export const CumulCalculator: React.FC = () => {
   const [newValue, setNewValue] = useState<string>('');
   const [newUnit, setNewUnit] = useState<EntryUnit>('h');
   const [newIsBreak, setNewIsBreak] = useState<boolean>(false);
+  const [newStartRaw, setNewStartRaw] = useState('');
+  const [newStartUnit, setNewStartUnit] = useState<EntryUnit>('h');
+  const invalidNewStart = newStartRaw.trim() !== '' && parseCumulStartTime(newStartRaw, newStartUnit) === null;
   const [copied, setCopied] = useState<boolean>(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -81,12 +105,7 @@ export const CumulCalculator: React.FC = () => {
   // === CALCULS ===
   // Durée totale de travail (centesimal hours) = (fin - début) si les deux sont renseignés
   // Sinon = 0 (seules les durées ajoutées comptent)
-  const totalWorkHours = (() => {
-    if (parsedStart === null || parsedEnd === null) return 0;
-    let diff = parsedEnd - parsedStart;
-    if (diff < 0) diff += 24; // passage minuit
-    return diff;
-  })();
+  const totalWorkHours = calculateCumulWorkHours(startSeconds, parseTimeOfDay(endTime));
 
   // Somme des durées "ajoutées" (non pauses)
   const addedDuration = entries
@@ -99,7 +118,8 @@ export const CumulCalculator: React.FC = () => {
     .reduce((acc, e) => acc + e.value, 0);
 
   // Total final = durée (fin-début) + ajouts - pauses
-  const totalCentesimal = Math.max(0, totalWorkHours + addedDuration - totalBreaks);
+  const totalCentesimal = calculateNetHours(totalWorkHours, [addedDuration], [totalBreaks]);
+  const invalidTotal = parsedStart === null || (endTime.trim() !== '' && parsedEnd === null) || entries.some(e => parseDurationInput(e.valueRaw, e.unit) === null);
   const totalSexagesimal = centesimalToSexagesimal(totalCentesimal);
 
   // Heure de fin effective (si fin non renseignée, on calcule à partir du total)
@@ -107,7 +127,7 @@ export const CumulCalculator: React.FC = () => {
 
   const handleAddEntry = () => {
     const parsedValue = parseDurationInput(newValue, newUnit);
-    if (parsedValue === null) return;
+    if (parsedValue === null || invalidNewStart) return;
 
     const entry: CumulEntry = {
       id: String(Date.now()),
@@ -116,12 +136,16 @@ export const CumulCalculator: React.FC = () => {
       valueRaw: newValue,
       unit: newUnit,
       isBreak: newIsBreak,
+      startRaw: newStartRaw,
+      startUnit: newStartUnit,
     };
 
     setEntries([...entries, entry]);
     setNewLabel('');
     setNewValue('');
     setNewIsBreak(false);
+    setNewStartRaw('');
+    setNewStartUnit('h');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -136,7 +160,11 @@ export const CumulCalculator: React.FC = () => {
   };
 
   const handleUpdateValue = (id: string, raw: string) => {
-    setEntries(entries.map((e) => (e.id === id ? { ...e, valueRaw: raw } : e)));
+    setEntries(entries.map((e) => (e.id === id ? { ...e, valueRaw: raw, value: parseDurationInput(raw, e.unit) ?? 0 } : e)));
+  };
+
+  const handleUpdateSchedule = (id: string, startRaw: string, startUnit: EntryUnit) => {
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, startRaw, startUnit } : e));
   };
 
   const handleUpdateLabel = (id: string, label: string) => {
@@ -144,7 +172,7 @@ export const CumulCalculator: React.FC = () => {
   };
 
   const handleUpdateUnit = (id: string, unit: EntryUnit) => {
-    setEntries(entries.map((e) => (e.id === id ? { ...e, unit, valueRaw: '' } : e)));
+    setEntries(entries.map((e) => (e.id === id ? { ...e, unit, valueRaw: parseDurationInput(e.valueRaw, e.unit) === null ? '' : String(e.value) } : e)));
   };
 
   const handleToggleBreak = (id: string) => {
@@ -156,16 +184,26 @@ export const CumulCalculator: React.FC = () => {
     setNewLabel('');
     setNewValue('');
     setNewIsBreak(false);
+    setNewStartRaw('');
+    setNewStartUnit('h');
     setStartTime('07:30');
+    setStartUnit('h');
     setEndTime('');
   };
 
   const handleCopyTotal = () => {
+    if (invalidTotal) return;
     const lines = [
       `Journée : ${formatTimeOfDay(parsedStart || 0)} → ${endTime ? formatTimeOfDay(parsedEnd || 0) : 'en cours'}`,
     ];
+    for (const entry of entries) {
+      const start = parseCumulStartTime(entry.startRaw, entry.startUnit);
+      const end = start === null ? null : calculateEntryEnd(start, entry.value);
+      const schedule = start !== null && end ? ` | ${formatCumulStartTime(start, 'h')} → ${formatCumulStartTime(end.seconds, 'h')}${end.daysLater ? ' (J+' + end.daysLater + ')' : ''}` : entry.startRaw.trim() ? ' | départ invalide' : '';
+      lines.push(`${entry.isBreak ? 'Pause' : 'Activité'} : ${entry.label} — ${formatSexagesimalDisplay(entry.value)}${schedule}`);
+    }
     if (totalBreaks > 0) lines.push(`Pauses totales : ${totalBreaks.toFixed(2)}c = ${formatSexagesimalDisplay(totalBreaks)}`);
-    lines.push(`TOTAL : ${totalCentesimal.toFixed(2)}h centésimal = ${totalSexagesimal.hours}h${String(totalSexagesimal.minutes).padStart(2, '0')}min`);
+    lines.push(`TOTAL : ${totalCentesimal.toFixed(2)}h centésimal = ${formatSexagesimalDisplay(totalCentesimal)}`);
     navigator.clipboard.writeText(lines.join('\n'));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -218,7 +256,7 @@ export const CumulCalculator: React.FC = () => {
 
         <button
           onClick={handleReset}
-          disabled={entries.length === 0 && !endTime}
+          disabled={entries.length === 0 && !endTime && startUnit === 'h' && startTime === '07:30' && !newValue && !newLabel && !newIsBreak && !newStartRaw && newStartUnit === 'h'}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors self-start sm:self-auto"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -241,21 +279,33 @@ export const CumulCalculator: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Start time */}
           <div>
-            <label className="text-[10px] text-slate-500 uppercase font-semibold block mb-1">
+            <label htmlFor="cumul-start-time" className="text-[10px] text-slate-400 uppercase font-semibold block mb-1">
               🚀 Début de journée
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                placeholder="07:30"
-                className="w-full bg-slate-900 border border-violet-500/40 rounded-lg px-3 py-2.5 text-lg font-mono font-bold text-white text-center focus:outline-none focus:border-violet-400"
-              />
-              <span className="absolute right-3 top-2.5 text-xs font-mono text-violet-400">
-                {parsedStart !== null ? `${parsedStart.toFixed(2)}h` : '?'}
-              </span>
+            <div role="group" aria-label="Unité de l'heure de début" className="flex gap-1 bg-slate-950 rounded-lg p-1 mb-2 border border-slate-800">
+              <button type="button" aria-pressed={startUnit === 'h'} onClick={() => handleStartUnitChange('h')}
+                className={`flex-1 rounded-md py-1.5 px-1 text-xs font-semibold ${startUnit === 'h' ? 'bg-sky-500 text-slate-950' : 'text-slate-300 hover:text-white'}`}>Heure normale</button>
+              <button type="button" aria-pressed={startUnit === 'c'} onClick={() => handleStartUnitChange('c')}
+                className={`flex-1 rounded-md py-1.5 px-1 text-xs font-semibold ${startUnit === 'c' ? 'bg-cyan-500 text-slate-950' : 'text-slate-300 hover:text-white'}`}>Centième</button>
             </div>
+            <input
+              id="cumul-start-time"
+              type="text"
+              inputMode={startUnit === 'c' ? 'decimal' : 'text'}
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              placeholder={startUnit === 'h' ? '07:30' : '7,50'}
+              aria-invalid={startSeconds === null}
+              aria-describedby="cumul-start-equivalence"
+              className="w-full bg-slate-900 border border-violet-500/40 rounded-lg px-3 py-2.5 text-lg font-mono font-bold text-white text-center focus:outline-none focus:border-violet-400"
+            />
+            <p id="cumul-start-equivalence" className={`mt-1 text-xs ${startSeconds === null ? 'text-rose-300' : 'text-violet-300'}`} aria-live="polite">
+              {startSeconds === null
+                ? (startUnit === 'h' ? 'Ex. 07:30 ou 07:19:48 (de 00:00 à 24:00).' : 'Ex. 7,50 ou 7.50 (de 0 à 24).')
+                : (startUnit === 'h'
+                  ? `≈ ${formatCumulStartTime(startSeconds, 'c')} h décimales`
+                  : `= ${formatCumulStartTime(startSeconds, 'h')} en heure normale`)}
+            </p>
           </div>
 
           {/* Arrow */}
@@ -406,12 +456,13 @@ export const CumulCalculator: React.FC = () => {
                   </div>
 
                   {/* Value input */}
-                  <div className="relative shrink-0">
+                  <div className="relative w-full sm:w-28 shrink-0">
                     <input
                       type="text"
                       value={entry.valueRaw}
+                       aria-invalid={parseDurationInput(entry.valueRaw, entry.unit) === null}
                       onChange={(e) => handleUpdateValue(entry.id, e.target.value)}
-                      className={`w-24 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-sm font-mono font-bold text-right focus:outline-none ${
+                      className={`w-full bg-slate-900 border border-slate-800 rounded-lg pl-2.5 pr-7 py-1 text-sm font-mono font-bold text-right focus:outline-none ${
                         entry.isBreak
                           ? 'focus:border-rose-500 text-rose-300'
                           : entry.unit === 'c'
@@ -437,7 +488,7 @@ export const CumulCalculator: React.FC = () => {
                   <div className="flex items-center gap-1 shrink-0">
                     <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                     <span className="text-sm font-mono font-semibold text-white whitespace-nowrap">
-                      {formatSexagesimalDisplay(entry.value)}
+                      {parseDurationInput(entry.valueRaw, entry.unit) === null ? 'Saisie invalide' : formatSexagesimalDisplay(entry.value)}
                     </span>
                   </div>
 
@@ -450,6 +501,9 @@ export const CumulCalculator: React.FC = () => {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
+                <EntrySchedule id={`entry-start-${entry.id}`} raw={entry.startRaw} unit={entry.startUnit}
+                  duration={parseDurationInput(entry.valueRaw, entry.unit)}
+                  onChange={(raw, unit) => handleUpdateSchedule(entry.id, raw, unit)} />
               </div>
             );
           })}
@@ -580,15 +634,20 @@ export const CumulCalculator: React.FC = () => {
           {/* Add button */}
           <button
             onClick={handleAddEntry}
-            disabled={!newValue}
+            disabled={previewValue === null || invalidNewStart}
             className="flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md transition-all self-end"
           >
             <Plus className="w-4 h-4" />
             <span>Ajouter</span>
           </button>
         </div>
+        <EntrySchedule id="new-entry-start" raw={newStartRaw} unit={newStartUnit} duration={previewValue}
+          onChange={(raw, unit) => { setNewStartRaw(raw); setNewStartUnit(unit); }} />
       </div>
 
+      {newValue.trim() !== '' && previewValue === null && <p role="alert" className="text-sm text-rose-300">Durée invalide. Exemple : 0,50 ou 0:30.</p>}
+      {invalidTotal && <p role="alert" className="text-sm text-rose-300">Corrigez les horaires ou durées invalides ; le total est provisoire et ne peut pas être copié.</p>}
+      {!invalidTotal && totalBreaks > totalWorkHours + addedDuration && <p role="status" className="text-sm text-amber-300">Les pauses dépassent la durée disponible ; le total est ramené à zéro.</p>}
       {/* TOTAL BANNER */}
       <div className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950/30 border border-violet-500/30 shadow-xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
@@ -656,10 +715,10 @@ export const CumulCalculator: React.FC = () => {
             </div>
             <div>
               <span className="text-[11px] uppercase font-bold text-sky-300 block">
-                TOTAL en H & Min
+                TOTAL en H, Min & Sec
               </span>
               <p className="text-3xl font-extrabold font-mono text-white">
-                {totalSexagesimal.hours}h{String(totalSexagesimal.minutes).padStart(2, '0')}
+                {totalSexagesimal.hours}h{String(totalSexagesimal.minutes).padStart(2, '0')}{totalSexagesimal.seconds > 0 && <span className="text-base">:{String(totalSexagesimal.seconds).padStart(2, '0')}</span>}
               </p>
             </div>
           </div>
@@ -675,6 +734,7 @@ export const CumulCalculator: React.FC = () => {
 
           <button
             onClick={handleCopyTotal}
+             disabled={invalidTotal}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
           >
             {copied ? (

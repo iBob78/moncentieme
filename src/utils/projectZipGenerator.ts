@@ -1,170 +1,98 @@
 import JSZip from 'jszip';
 
-/**
- * GÉNÉRATION DU ZIP DU PROJET - VERSION 100% STATIQUE
- *
- * Chaque fichier du projet est importé individuellement avec la requête `?raw`
- * de Vite (transformée à coup sûr au moment du build en simple chaîne de caractères).
- * Aucun appel `import.meta.glob()` ni `meta.glob()` n'existe dans ce module :
- * impossible d'avoir une erreur "xxx.glob is not a function" à l'exécution.
- */
+// Explicit raw imports: Vite embeds source text at build time, with no runtime glob.
+import file0 from "../../.gitignore?raw";
+import file1 from "../../AGENTS.md?raw";
+import file2 from "../../README.md?raw";
+import file3 from "../../index.html?raw";
+import file4 from "../../package-lock.json?raw";
+import file5 from "../../package.json?raw";
+import file6 from "../../public/robots.txt?raw";
+import file7 from "../App.tsx?raw";
+import file8 from "../components/AnalogClockCentesimal.tsx?raw";
+import file9 from "../components/AnalogClockNormal.tsx?raw";
+import file10 from "../components/ClockStyles.ts?raw";
+import file11 from "../components/ConversionTable.tsx?raw";
+import file12 from "../components/ConverterTool.tsx?raw";
+import file13 from "../components/CumulCalculator.tsx?raw";
+import file14 from "../components/DownloadZipModal.tsx?raw";
+import file15 from "../components/DualClockDisplay.tsx?raw";
+import file16 from "../components/DualStopwatch.tsx?raw";
+import file17 from "../components/EducationalModal.tsx?raw";
+import file18 from "../components/EquivalenceVisualizer.tsx?raw";
+import file19 from "../components/LegalModal.tsx?raw";
+import file20 from "../components/OptionBCentesimalOnly.tsx?raw";
+import file21 from "../components/PayrollTimesheetCalculator.tsx?raw";
+import file22 from "../components/SettingsModal.tsx?raw";
+import file23 from "../components/TimeTravelController.tsx?raw";
+import file24 from "../components/VercelDeployModal.tsx?raw";
+import file25 from "../index.css?raw";
+import file26 from "../main.tsx?raw";
+import file27 from "../types/clock.ts?raw";
+import file28 from "./audioTick.ts?raw";
+import file29 from "./cn.ts?raw";
+import file30 from "./projectZipGenerator.ts?raw";
+import file31 from "./timeCalculations.ts?raw";
+import file32 from "../vite-env.d.ts?raw";
+import file33 from "../../tests/timeCalculations.test.mjs?raw";
+import file34 from "../../tsconfig.json?raw";
+import file35 from "../../vercel.json?raw";
+import file36 from "../../vite.config.ts?raw";
+import file37 from "../../.github/workflows/ci.yml?raw";
+import file38 from "../../CHANGELOG.md?raw";
 
-// ===== Fichiers à la racine =====
-import indexHtml from '../../index.html?raw';
-import viteConfigTs from '../../vite.config.ts?raw';
-import tsconfigJson from '../../tsconfig.json?raw';
-import vercelJson from '../../vercel.json?raw';
-import readmeMd from '../../README.md?raw';
-
-// ===== Source principale =====
-import mainTsx from '../main.tsx?raw';
-import appTsx from '../App.tsx?raw';
-import indexCss from '../index.css?raw';
-import viteEnvDts from '../vite-env.d.ts?raw';
-
-// ===== Types & Utilitaires =====
-import clockTypes from '../types/clock.ts?raw';
-import timeCalculations from '../utils/timeCalculations.ts?raw';
-import audioTick from '../utils/audioTick.ts?raw';
-import cnUtils from '../utils/cn.ts?raw';
-
-// ===== Composants =====
-import AnalogClockNormal from '../components/AnalogClockNormal.tsx?raw';
-import AnalogClockCentesimal from '../components/AnalogClockCentesimal.tsx?raw';
-import ClockStyles from '../components/ClockStyles.ts?raw';
-import DualClockDisplay from '../components/DualClockDisplay.tsx?raw';
-import OptionBCentesimalOnly from '../components/OptionBCentesimalOnly.tsx?raw';
-import EquivalenceVisualizer from '../components/EquivalenceVisualizer.tsx?raw';
-import TimeTravelController from '../components/TimeTravelController.tsx?raw';
-import ConverterTool from '../components/ConverterTool.tsx?raw';
-import ConversionTable from '../components/ConversionTable.tsx?raw';
-import PayrollTimesheetCalculator from '../components/PayrollTimesheetCalculator.tsx?raw';
-import DualStopwatch from '../components/DualStopwatch.tsx?raw';
-import EducationalModal from '../components/EducationalModal.tsx?raw';
-import SettingsModal from '../components/SettingsModal.tsx?raw';
-import VercelDeployModal from '../components/VercelDeployModal.tsx?raw';
-import DownloadZipModal from '../components/DownloadZipModal.tsx?raw';
-
-// ===== Fichiers générés/édités à la main (contenus définis ci-dessous) =====
-const gitignoreContent = `# Logs
-logs
-*.log
-npm-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-`;
-
-const packageJsonContent = `{
-  "name": "horloge-temps-reel-et-centieme",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "canvas-confetti": "^1.9.4",
-    "clsx": "^2.1.1",
-    "jszip": "^3.10.1",
-    "lucide-react": "^1.35.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "tailwind-merge": "^3.4.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.1.17",
-    "@types/node": "^22.19.17",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "tailwindcss": "^4.1.17",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.2",
-    "vite-plugin-singlefile": "^2.3.0"
-  },
-  "allowScripts": {
-    "esbuild": true
-  }
-}
-`;
-
-/**
- * Manifeste statique du projet : chemin dans l'archive -> contenu du fichier.
- * L'ordre et le contenu sont entièrement déterminés au moment du BUILD.
- */
-const projectFiles: Record<string, string> = {
-  'index.html': indexHtml,
-  'vite.config.ts': viteConfigTs,
-  'tsconfig.json': tsconfigJson,
-  'vercel.json': vercelJson,
-  'README.md': readmeMd,
-  '.gitignore': gitignoreContent,
-  'package.json': packageJsonContent,
-  'src/main.tsx': mainTsx,
-  'src/App.tsx': appTsx,
-  'src/index.css': indexCss,
-  'src/vite-env.d.ts': viteEnvDts,
-  'src/types/clock.ts': clockTypes,
-  'src/utils/timeCalculations.ts': timeCalculations,
-  'src/utils/audioTick.ts': audioTick,
-  'src/utils/cn.ts': cnUtils,
-  'src/components/AnalogClockNormal.tsx': AnalogClockNormal,
-  'src/components/AnalogClockCentesimal.tsx': AnalogClockCentesimal,
-  'src/components/ClockStyles.ts': ClockStyles,
-  'src/components/DualClockDisplay.tsx': DualClockDisplay,
-  'src/components/OptionBCentesimalOnly.tsx': OptionBCentesimalOnly,
-  'src/components/EquivalenceVisualizer.tsx': EquivalenceVisualizer,
-  'src/components/TimeTravelController.tsx': TimeTravelController,
-  'src/components/ConverterTool.tsx': ConverterTool,
-  'src/components/ConversionTable.tsx': ConversionTable,
-  'src/components/PayrollTimesheetCalculator.tsx': PayrollTimesheetCalculator,
-  'src/components/DualStopwatch.tsx': DualStopwatch,
-  'src/components/EducationalModal.tsx': EducationalModal,
-  'src/components/SettingsModal.tsx': SettingsModal,
-  'src/components/VercelDeployModal.tsx': VercelDeployModal,
-  'src/components/DownloadZipModal.tsx': DownloadZipModal,
+const sources: Record<string, string> = {
+  ".gitignore": file0,
+  "AGENTS.md": file1,
+  "README.md": file2,
+  "index.html": file3,
+  "package-lock.json": file4,
+  "package.json": file5,
+  "public/robots.txt": file6,
+  "src/App.tsx": file7,
+  "src/components/AnalogClockCentesimal.tsx": file8,
+  "src/components/AnalogClockNormal.tsx": file9,
+  "src/components/ClockStyles.ts": file10,
+  "src/components/ConversionTable.tsx": file11,
+  "src/components/ConverterTool.tsx": file12,
+  "src/components/CumulCalculator.tsx": file13,
+  "src/components/DownloadZipModal.tsx": file14,
+  "src/components/DualClockDisplay.tsx": file15,
+  "src/components/DualStopwatch.tsx": file16,
+  "src/components/EducationalModal.tsx": file17,
+  "src/components/EquivalenceVisualizer.tsx": file18,
+  "src/components/LegalModal.tsx": file19,
+  "src/components/OptionBCentesimalOnly.tsx": file20,
+  "src/components/PayrollTimesheetCalculator.tsx": file21,
+  "src/components/SettingsModal.tsx": file22,
+  "src/components/TimeTravelController.tsx": file23,
+  "src/components/VercelDeployModal.tsx": file24,
+  "src/index.css": file25,
+  "src/main.tsx": file26,
+  "src/types/clock.ts": file27,
+  "src/utils/audioTick.ts": file28,
+  "src/utils/cn.ts": file29,
+  "src/utils/projectZipGenerator.ts": file30,
+  "src/utils/timeCalculations.ts": file31,
+  "src/vite-env.d.ts": file32,
+  "tests/timeCalculations.test.mjs": file33,
+  "tsconfig.json": file34,
+  "vercel.json": file35,
+  "vite.config.ts": file36,
+  ".github/workflows/ci.yml": file37,
+  "CHANGELOG.md": file38,
 };
 
 export async function downloadProjectZip(onProgress?: (percent: number) => void): Promise<void> {
   const zip = new JSZip();
-
-  // Ajout de tous les fichiers du manifeste statique
-  for (const [filePath, content] of Object.entries(projectFiles)) {
-    zip.file(filePath, content);
-  }
-
-  // Génération du blob ZIP compressé
-  const blob = await zip.generateAsync(
-    {
-      type: 'blob',
-      compression: 'DEFLATE',
-      compressionOptions: { level: 9 },
-    },
-    (metadata) => {
-      if (onProgress) {
-        onProgress(Math.round(metadata.percent));
-      }
-    }
-  );
-
-  // Déclenchement du téléchargement dans le navigateur
+  for (const [path, content] of Object.entries(sources)) zip.file(path, content);
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } }, metadata => onProgress?.(Math.round(metadata.percent)));
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'horloge-temps-reel-centieme-github.zip';
+  link.download = 'moncentieme-sources.zip';
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

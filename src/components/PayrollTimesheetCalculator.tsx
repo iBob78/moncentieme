@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { WorkPeriod } from '../types/clock';
-import { calculateDuration } from '../utils/timeCalculations';
+import { calculateDuration, parseNonNegativeDecimal, parseTimeOfDay } from '../utils/timeCalculations';
 import { Briefcase, Plus, Trash2, Copy, Check, DollarSign, Clock } from 'lucide-react';
 
 export const PayrollTimesheetCalculator: React.FC = () => {
@@ -27,7 +27,9 @@ export const PayrollTimesheetCalculator: React.FC = () => {
     0
   );
 
-  const rateNum = parseFloat(hourlyRate.replace(',', '.')) || 0;
+  const parsedRate = hourlyRate.trim() === '' ? 0 : parseNonNegativeDecimal(hourlyRate);
+  const rateNum = parsedRate ?? 0;
+  const invalidInputs = parsedRate === null || periods.some(period => parseTimeOfDay(period.start) === null || parseTimeOfDay(period.end) === null);
   const totalEarnings = totalCentesimalHours * rateNum;
 
   const handleAddPeriod = () => {
@@ -48,6 +50,7 @@ export const PayrollTimesheetCalculator: React.FC = () => {
   };
 
   const copySummary = () => {
+    if (invalidInputs) return;
     const text = `Relevé d'heures :
 ${calculations
   .map(
@@ -56,7 +59,7 @@ ${calculations
   )
   .join('\n')}
 Total : ${totalHoursNormal}h${String(totalRemainingMinutes).padStart(2, '0')} (${totalCentesimalHours.toFixed(2)} heures industrielles)
-${rateNum > 0 ? `Montant total (${rateNum} €/h) : ${totalEarnings.toFixed(2)} €` : ''}`;
+${rateNum > 0 ? `Montant total (${rateNum} €/h) : ${invalidInputs ? '—' : totalEarnings.toFixed(2) + ' €'}` : ''}`;
 
     navigator.clipboard.writeText(text);
     setCopiedSummary(true);
@@ -215,6 +218,7 @@ ${rateNum > 0 ? `Montant total (${rateNum} €/h) : ${totalEarnings.toFixed(2)} 
               <input
                 type="text"
                 value={hourlyRate}
+                 aria-invalid={parsedRate === null}
                 onChange={(e) => setHourlyRate(e.target.value)}
                 className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-xs text-right font-mono text-white"
               />
@@ -228,10 +232,12 @@ ${rateNum > 0 ? `Montant total (${rateNum} €/h) : ${totalEarnings.toFixed(2)} 
           </div>
         </div>
 
+        {invalidInputs && <p role="alert" className="text-sm text-rose-300">Corrigez les horaires ou le taux horaire ; les totaux sont provisoires.</p>}
         {/* Copy summary button */}
         <div className="mt-4 pt-4 border-t border-slate-800/80 flex justify-end">
           <button
             onClick={copySummary}
+             disabled={invalidInputs}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
           >
             {copiedSummary ? (

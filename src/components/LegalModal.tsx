@@ -222,11 +222,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, initial
               <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 mb-4">
                 <p className="text-emerald-200 text-sm font-bold flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5" />
-                  Aucune donnée personnelle n'est collectée, ni transmise, ni stockée.
+                  Les saisies des calculateurs restent dans votre navigateur.
                 </p>
                 <p className="text-emerald-100/80 text-xs mt-1">
                   Tous les calculs d'horloge et de conversion sont effectués localement, dans votre
-                  navigateur. Rien ne part sur un serveur : il n'existe ni compte, ni formulaire, ni
+                  navigateur. Les saisies ne sont pas envoyées à un serveur : il n'existe ni compte, ni formulaire, ni
                   statistique de fréquentation.
                 </p>
               </div>
@@ -236,12 +236,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, initial
               </SectionTitle>
               <p className="text-slate-300">
                 <PH>Votre nom ou société</PH> — <PH>contact@votre-domaine.fr</PH>.
-                Dans les faits, aucun traitement de données à caractère personnel n'est mis en œuvre :
-                le site n'est donc pas soumis à obligation de registre RGPD.
+                Les obligations de protection des données dépendent des traitements de l'éditeur et de l'hébergeur ; elles restent à vérifier.
               </p>
 
               <SectionTitle icon={<Lock className="w-4 h-4 text-emerald-400" />}>
-                2. Données traitées : néant
+                2. Données saisies dans l'application
               </SectionTitle>
               <ul className="space-y-1.5 text-slate-300">
                 <li>• Pas de compte utilisateur, pas d'inscription, pas de formulaire de contact collectant.</li>
@@ -251,21 +250,17 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, initial
               </ul>
 
               <SectionTitle icon={<Globe className="w-4 h-4 text-emerald-400" />}>
-                3. Seul service tiers : polices d'écriture
+                3. Hébergement et ressources
               </SectionTitle>
               <p className="text-slate-300">
-                Les typographies sont servies par Google Fonts. Lors du chargement, votre adresse IP est
-                techniquement visible par ce service. Pour un niveau de confidentialité maximal, vous
-                pouvez auto-héberger les polices (fichiers WOFF2 dans le projet) et supprimer tout appel
-                externe : le site fonctionne alors en circuit totalement fermé.
+                Les polices sont celles de votre appareil, sans chargement distant. L'hébergeur peut traiter des données techniques (adresse IP, journaux de connexion) nécessaires à la diffusion et à la sécurité. L'éditeur doit préciser ses pratiques.
               </p>
 
               <SectionTitle icon={<Info className="w-4 h-4 text-emerald-400" />}>
                 4. Vos droits (RGPD)
               </SectionTitle>
               <p className="text-slate-300">
-                Aucune donnée n'étant conservée, les droits d'accès, de rectification, d'effacement, de
-                limitation, de portabilité et d'opposition sont sans objet. Pour toute question relative
+                Les droits relatifs aux données personnelles dépendent des traitements effectivement réalisés. Pour toute question relative
                 à la vie privée : <PH>contact@votre-domaine.fr</PH>. Réponse sous 30 jours.
               </p>
 
@@ -273,9 +268,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, initial
                 5. CNIL
               </SectionTitle>
               <p className="text-slate-300">
-                Le site étant exempt de cookies et de collecte, il entre dans le cadre d'exemption de
-                déclaration auprès de la CNIL. Un bandeau cookies n'est donc pas requis (délibération
-                CNIL n° 2020-091).
+                L'application ne dépose ni cookie ni traceur. Les obligations de l'éditeur et de l'hébergeur doivent être évaluées selon la réglementation applicable.
               </p>
             </div>
           )}

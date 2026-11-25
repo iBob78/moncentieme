@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRightLeft, Copy, Check, Calculator, HelpCircle } from 'lucide-react';
-import { timeToCentesimal, centesimalToSexagesimal } from '../utils/timeCalculations';
+import { timeToCentesimal, centesimalToSexagesimal, parseNonNegativeDecimal } from '../utils/timeCalculations';
 
 export const ConverterTool: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'sexToCent' | 'centToSex'>('sexToCent');
@@ -23,10 +23,12 @@ export const ConverterTool: React.FC = () => {
   );
 
   // Computed: Centesimal -> Sexagesimal
-  const parsedDecimal = parseFloat(inputDecimal.replace(',', '.')) || 0;
+  const validDecimal = parseNonNegativeDecimal(inputDecimal);
+  const parsedDecimal = validDecimal ?? 0;
   const sexagesimalResult = centesimalToSexagesimal(parsedDecimal);
 
   const handleCopy = (text: string) => {
+    if (activeTab === 'centToSex' && validDecimal === null) return;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -90,7 +92,7 @@ export const ConverterTool: React.FC = () => {
                   min="0"
                   max="999"
                   value={inputHours}
-                  onChange={(e) => setInputHours(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  onChange={(e) => setInputHours(Math.max(0, Math.min(999, parseInt(e.target.value, 10) || 0)))}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-lg font-mono font-bold text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                 />
                 <span className="absolute right-3.5 top-3.5 text-xs text-slate-500 font-mono">h</span>
@@ -228,6 +230,7 @@ export const ConverterTool: React.FC = () => {
               <input
                 type="text"
                 value={inputDecimal}
+                 aria-invalid={validDecimal === null}
                 onChange={(e) => setInputDecimal(e.target.value)}
                 placeholder="13.50"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xl font-mono font-bold text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
@@ -258,7 +261,8 @@ export const ConverterTool: React.FC = () => {
           </div>
 
           {/* Result Card */}
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-teal-950/40 via-sky-950/30 to-slate-950 border border-sky-500/30 shadow-xl">
+          {validDecimal === null && <p role="alert" className="text-sm text-rose-300">Saisissez un nombre d'heures positif ou nul (ex. 7,75).</p>}
+          <div hidden={validDecimal === null} className="p-5 rounded-2xl bg-gradient-to-r from-teal-950/40 via-sky-950/30 to-slate-950 border border-sky-500/30 shadow-xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <span className="text-xs font-semibold text-sky-400 uppercase tracking-wider">
