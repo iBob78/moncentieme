@@ -34,7 +34,7 @@ Les deux cadrans doivent rester côte à côte sur mobile (dès 320 px). Les lig
 ## Vérifications
 1. Node 22.18+ recommandé ; npm ci.
 2. npm test (ajouter une régression à chaque modification métier), npm run typecheck, npm run build.
-3. Vérifier les cinq onglets, les champs de départ par activité sur mobile et ordinateur, conservation des saisies, pauses, minuit, copies et chronomètre en navigation.
+3. Vérifier les cinq onglets, le convertisseur sans secondes (arrondi à la minute et retenue), le pied de page minimal, les deux cadrans côte à côte, le découpage Harmo et les commandes de réorganisation hors édition, les champs de départ par activité sur mobile et ordinateur, conservation des saisies, pauses, minuit, copies et chronomètre en navigation.
 4. Actualiser CHANGELOG.md pour toute évolution significative, README et le manifeste statique de l'export ZIP à chaque ajout, renommage ou suppression de fichier ; conserver les imports ?raw explicites. Ne jamais annoncer un test réussi sans l'avoir exécuté.
 
 ## Intégration continue

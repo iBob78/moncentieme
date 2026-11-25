@@ -101,7 +101,7 @@ Importer le dépôt, choisir Vite, commande npm run build, sortie dist. Vérifie
 
 ## Historique et état des validations
 
-Consulter [CHANGELOG.md](CHANGELOG.md) pour les changements, les preuves de validation et les points restant à traiter. Le premier contrôle GitHub Actions du 25 novembre 2026 a réussi sur le commit `08a0fb3` ([rapport](https://github.com/iBob78/moncentieme/actions/runs/45576478244)). La version fonctionnelle `2e7675f` a également réussi tous les contrôles ([rapport CI](https://github.com/iBob78/moncentieme/actions/runs/45582479366)) et son aperçu Vercel a été accepté par le propriétaire le 25 novembre 2026 pour le cumul par activité. Les commits suivants doivent être vérifiés dans Actions.
+Consulter [CHANGELOG.md](CHANGELOG.md) pour les changements, les preuves de validation et les points restant à traiter. Le premier contrôle GitHub Actions du 25 novembre 2026 a réussi sur le commit `08a0fb3` ([rapport](https://github.com/iBob78/moncentieme/actions/runs/45576478244)). La version fonctionnelle `2e7675f` a également réussi tous les contrôles ([rapport CI](https://github.com/iBob78/moncentieme/actions/runs/45582479366)) et son aperçu Vercel a été accepté par le propriétaire le 25 novembre 2026 pour le cumul par activité. La refonte mobile et le convertisseur compact ont été acceptés par le propriétaire le 25 novembre 2026. [CI du commit fonctionnel bef0c2a](https://github.com/iBob78/moncentieme/actions/runs/45595020071) et [Preview Vercel](https://vercel.com/moncentieme/moncentieme/8Ky8T6wmPZyWvrnA25h6hRbcGMWi) réussies. Les commits suivants doivent être vérifiés dans Actions. Cette acceptation ne remplace pas les essais exhaustifs sur appareils réels.
 
 ## Contribution
 
