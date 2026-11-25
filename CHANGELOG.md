@@ -5,6 +5,7 @@ Les changements ci-dessous décrivent la branche de maintenance en cours, et non
 ## En préparation — 25 novembre 2026
 
 ### Corrections métier
+- Cumul : choix du format du début de journée (heure normale ou centième), conversion réversible à la seconde, affichage de l'équivalence et des secondes utiles dans les résultats. Tests des limites et du passage de minuit.
 - Centralisation de la validation des heures, durées et nombres décimaux dans src/utils/timeCalculations.ts.
 - Refus des valeurs négatives, non finies et malformées ; prise en charge des séparateurs virgule et point.
 - Correction du cumul : une durée éditée est immédiatement répercutée dans le total. Les changements d'unité préservent la valeur valide.

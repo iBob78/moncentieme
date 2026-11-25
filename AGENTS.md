@@ -14,7 +14,7 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 - 1 h = 60 min = 3600 s = 100 centièmes d'heure ; 1 centième = 36 s. 7,60 h = 7 h 36, jamais 7 h 60.
 - Accepter virgule et point ; rejeter valeurs négatives, non finies, minutes/secondes >= 60 et saisies malformées.
 - Heure de journée distincte d'une durée : 24:00 seul horaire 24 valide. Fin antérieure au début = passage de minuit ; heures égales = zéro.
-- Cumul : (fin - début) + ajouts - pauses ; début seul = référence. Arrondir uniquement à l'affichage. Ne jamais copier un total connu invalide.
+- Cumul : (fin - début) + ajouts - pauses ; début seul = référence. Début saisissable en HH:MM[:SS] ou heures décimales (virgule/point), précision à la seconde. Le changement de mode doit conserver la seconde exacte (jusqu'à six décimales affichées). Fin toujours en HH:MM. Arrondir uniquement à l'affichage. Ne jamais copier un total connu invalide.
 - Paie : estimation brute, sans majorations ni règles conventionnelles implicites ; les périodes superposées sont additionnées.
 
 ## Confidentialité et interface

@@ -188,3 +188,37 @@ export function parseDurationInput(raw: string, unit: 'c' | 'h'): number | null 
 export function calculateNetHours(base: number, additions: number[], breaks: number[]): number {
   return Math.max(0, base + additions.reduce((sum, n) => sum + n, 0) - breaks.reduce((sum, n) => sum + n, 0));
 }
+
+/** Start of a workday in whole seconds from midnight, including 24:00.
+ * Decimal input is rounded to the nearest second, not to the nearest minute.
+ */
+export function parseCumulStartTime(raw: string, unit: 'h' | 'c'): number | null {
+  if (unit === 'c') {
+    const hours = parseNonNegativeDecimal(raw);
+    return hours === null || hours > 24 ? null : Math.round(hours * 3600);
+  }
+  const match = /^(\d{1,2})[:h,](\d{1,2})(?::(\d{1,2}))?$/i.exec(raw.trim());
+  if (!match) return null;
+  const h = Number(match[1]), m = Number(match[2]), s = Number(match[3] ?? 0);
+  if (h > 24 || m >= 60 || s >= 60 || (h === 24 && (m !== 0 || s !== 0))) return null;
+  return h * 3600 + m * 60 + s;
+}
+
+/** Six decimal places are sufficient for a lossless round trip at second precision. */
+export function formatCumulStartTime(seconds: number, unit: 'h' | 'c'): string {
+  if (unit === 'c') {
+    const [whole, fraction] = (seconds / 3600).toFixed(6).split('.');
+    return whole + ',' + fraction.replace(/0+$/, '').padEnd(2, '0');
+  }
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor(seconds % 3600 / 60);
+  const s = seconds % 60;
+  return formatSexagesimalTime(h, m, s, s !== 0).display;
+}
+
+/** Single work period, with an optional midnight crossing, before breaks. */
+export function calculateCumulWorkHours(startSeconds: number | null, endMinutes: number | null): number {
+  if (startSeconds === null || endMinutes === null) return 0;
+  const difference = endMinutes * 60 - startSeconds;
+  return (difference < 0 ? difference + 86400 : difference) / 3600;
+}
