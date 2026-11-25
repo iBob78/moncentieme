@@ -4,6 +4,8 @@ Ce journal décrit les évolutions versionnées. Le statut de déploiement est �
 
 ## En préparation — optimisation smartphone (25 novembre 2026)
 
+- Convertisseur simplifié : heures et minutes côte à côte, suppression des secondes, exemples et explications permanentes, résultat et copie compacts ; conversion inverse arrondie à la minute la plus proche avec tests de retenue.
+
 - Pied de page minimal : deux liens juridiques, suppression des badges et descriptions redondantes, réduction des marges ; toutes les informations restent accessibles.
 
 - Cumul : affichage centésimal à deux décimales (ajustement après retour utilisateur), précision interne conservée. Découpage automatique des activités en conflit (pauses prioritaires puis départ le plus tardif), reprise dans les créneaux libres, copie des segments et absence de double déduction des pauses horodatées. Régression Harmo 09:20–11:30 puis 12:00–12:32.

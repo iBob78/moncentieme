@@ -320,3 +320,9 @@ export function calculateCumulPauseDeduction(entries: CumulScheduleInput[], dayS
   }
   return untimed + (hasTimedWork ? 0 : mergeCumulSlots(timed).reduce((sum,s) => sum + s.end - s.start, 0) / 3600);
 }
+
+/** Convert decimal hours directly to the nearest whole minute (no intermediate rounding). */
+export function decimalHoursToMinutes(decimalHours: number): { hours: number; minutes: number } {
+  const totalMinutes = Math.round(decimalHours * 60);
+  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
+}

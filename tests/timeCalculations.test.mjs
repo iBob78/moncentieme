@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd, reorderEntries, formatCumulDecimal, scheduleCumulEntries, normalizeCumulStart, calculateCumulPauseDeduction } from '../src/utils/timeCalculations.ts';
+import { timeToCentesimal, centesimalToSexagesimal, formatCentesimalTime, calculateDuration, parseTimeOfDay, parseDurationInput, parseNonNegativeDecimal, calculateNetHours, generateMinuteConversionTable, parseCumulStartTime, formatCumulStartTime, calculateCumulWorkHours, calculateEntryEnd, reorderEntries, formatCumulDecimal, scheduleCumulEntries, normalizeCumulStart, calculateCumulPauseDeduction, decimalHoursToMinutes } from '../src/utils/timeCalculations.ts';
 
 test('conversion et arrondi', () => {
   assert.equal(timeToCentesimal(13, 30), 13.5);
@@ -127,4 +127,14 @@ test('affichage du cumul à deux décimales fixes', () => {
   assert.equal(formatCumulDecimal(12), '12,00');
   assert.equal(formatCumulDecimal(11.5), '11,50');
   assert.equal(formatCumulDecimal(0), '0,00');
+});
+
+test('convertisseur compact : arrondi à la minute et retenue', () => {
+  assert.deepEqual(decimalHoursToMinutes(2.7), { hours: 2, minutes: 42 });
+  assert.deepEqual(decimalHoursToMinutes(9.33), { hours: 9, minutes: 20 });
+  assert.deepEqual(decimalHoursToMinutes(1.99), { hours: 1, minutes: 59 });
+  assert.deepEqual(decimalHoursToMinutes(1.999), { hours: 2, minutes: 0 });
+  assert.deepEqual(decimalHoursToMinutes(0.0083), { hours: 0, minutes: 0 });
+  assert.deepEqual(decimalHoursToMinutes(0.01), { hours: 0, minutes: 1 });
+  assert.deepEqual(decimalHoursToMinutes(35.5), { hours: 35, minutes: 30 });
 });
