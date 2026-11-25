@@ -15,7 +15,7 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 - Accepter virgule et point ; rejeter valeurs négatives, non finies, minutes/secondes >= 60 et saisies malformées.
 - Heure de journée distincte d'une durée : 24:00 seul horaire 24 valide. Fin antérieure au début = passage de minuit ; heures égales = zéro.
 - Cumul : (fin - début) + ajouts - pauses ; début seul = référence. Début saisissable en HH:MM[:SS] ou heures décimales (virgule/point), précision à la seconde. Le changement de mode doit conserver la seconde exacte (jusqu'à six décimales affichées). Fin toujours en HH:MM. Arrondir uniquement à l'affichage. Ne jamais copier un total connu invalide.
-- Chaque ligne du cumul peut porter un départ facultatif indépendant du début de journée ; son heure de fin est le départ + la durée, en deux formats et avec indication des jours suivants. Les horaires de ligne sont informatifs : ne jamais les additionner au cumul, ni modifier la durée d'une ligne lors du changement de son format de départ.
+- Chaque ligne du cumul peut porter un départ facultatif indépendant du début de journée ; son heure de fin est le départ + la durée, en deux formats et avec indication des jours suivants. Exemple de régression obligatoire : Harmo, durée 2,70 h, départ 07:30 / 7,50, fin 10:12 / 10,20 ; départ modifiable depuis la ligne et depuis le formulaire. Les horaires de ligne sont informatifs : ne jamais les additionner au cumul, ni modifier la durée d'une ligne lors du changement de son format de départ.
 - Paie : estimation brute, sans majorations ni règles conventionnelles implicites ; les périodes superposées sont additionnées.
 
 ## Confidentialité et interface
@@ -25,7 +25,7 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 ## Vérifications
 1. Node 22.18+ recommandé ; npm ci.
 2. npm test (ajouter une régression à chaque modification métier), npm run typecheck, npm run build.
-3. Vérifier les cinq onglets, conservation des saisies, pauses, minuit, copies et chronomètre en navigation.
+3. Vérifier les cinq onglets, les champs de départ par activité sur mobile et ordinateur, conservation des saisies, pauses, minuit, copies et chronomètre en navigation.
 4. Actualiser CHANGELOG.md pour toute évolution significative, README et le manifeste statique de l'export ZIP à chaque ajout, renommage ou suppression de fichier ; conserver les imports ?raw explicites. Ne jamais annoncer un test réussi sans l'avoir exécuté.
 
 ## Intégration continue

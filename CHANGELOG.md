@@ -1,8 +1,8 @@
 # Journal des modifications — Mon centième
 
-Les changements ci-dessous décrivent la branche de maintenance en cours, et non une version déjà déployée.
+Ce journal décrit les évolutions versionnées. Le statut de déploiement est à vérifier séparément sur Vercel.
 
-## En préparation — 25 novembre 2026
+## Maintenance — 25 novembre 2026
 
 ### Corrections métier
 - Cumul : départ facultatif par activité ou pause, saisissable lors de l'ajout ou après, en heure normale ou centième ; fin calculée dans les deux unités avec indication de passage de minuit. Le total de durée reste inchangé. Régression Harmo : 2,70 h à 07:30 finit à 10:12.
@@ -32,10 +32,12 @@ Première exécution GitHub Actions confirmée réussie pour le commit `08a0fb34
 
 Rapport : https://github.com/iBob78/moncentieme/actions/runs/45576478244
 
-Cette preuve concerne ce commit précis ; tout commit suivant doit être contrôlé à nouveau. La CI ne constitue pas une validation visuelle ni un audit de sécurité.
+Contrôle de la fonctionnalité finale : commit `2e7675f11f680b955c912f4dddf27c3395659972`, [GitHub Actions](https://github.com/iBob78/moncentieme/actions/runs/45582479366) réussi pour npm ci, tests, TypeScript, build et sortie dist/index.html. [Preview Vercel](https://vercel.com/moncentieme/moncentieme/85BpXawftuQjT1VZHB5QcpyEEdRk) réussie. Le propriétaire a accepté la fonctionnalité de départ par activité le 25 novembre 2026 et autorisé la fusion.
 
-### Restes à faire avant publication
-- Tester manuellement les cinq onglets sur ordinateur et mobile, notamment la modification des durées, la navigation, le chronomètre, les copies et l'export ZIP (module historique).
+Ces preuves concernent les commits indiqués ; les commits suivants doivent être contrôlés à nouveau. L'acceptation utilisateur concerne le cumul, pas un audit visuel exhaustif ni un audit de sécurité.
+
+### Vérifications et améliorations restant ouvertes
+- Compléter les tests manuels des cinq onglets sur ordinateur et mobile, notamment navigation, chronomètre, copies et export ZIP (module historique). Le cumul par activité a été accepté par le propriétaire.
 - Renseigner les coordonnées légales de l'éditeur et de l'hébergeur et vérifier les traitements techniques d'hébergement.
 - Configurer, si souhaité, une protection de main exigeant la réussite du job de qualité ; le workflow seul ne bloque pas une fusion.
 - Vérifier la prévisualisation et le déploiement Vercel après autorisation de fusion.
@@ -44,6 +46,9 @@ Cette preuve concerne ce commit précis ; tout commit suivant doit être contrô
 - `3ba0fe4` : fiabilisation et documentation.
 - `56f64cc` : manifeste ZIP statique.
 - `08a0fb3` : intégration continue et documentation.
+- `c675f56` : documentation de la première CI réussie.
+- `0e9ffbc` : départ de journée dans les deux unités.
+- `2e7675f` : départ indépendant par activité et fin automatique.
 - Pull request : https://github.com/iBob78/moncentieme/pull/1
 
 ## Historique initial

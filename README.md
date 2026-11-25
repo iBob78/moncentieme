@@ -25,6 +25,15 @@ Une heure contient 100 centièmes, soit 36 secondes par centième. Formule : heu
 
 Passage de minuit pris en charge pour une période unique ; début = fin donne zéro. Pas de gestion de dates ou de changement d'heure saisonnier pour les durées. Résultats indicatifs.
 
+## Utilisation : horaire d'une activité
+
+1. Ouvrir Cumul, ajouter une durée ou une pause (ex. Harmo, 2,70 h).
+2. Dans la ligne ou le formulaire d'ajout, choisir Heure normale ou Centième sous « Heure de début de cette activité ».
+3. Renseigner 07:30 ou 7,50 : la fin apparaît automatiquement à 10:12 / 10,20 h. La durée reste 2 h 42 min.
+4. Modifier le départ ou la durée : la fin se recalcule. Si elle dépasse minuit, J+1 (ou davantage) est affiché.
+
+Le départ d'une activité est facultatif et indépendant du début de journée. Les horaires de ligne ne s'ajoutent jamais au total des durées. Ils figurent dans le récapitulatif copié lorsqu'ils sont renseignés.
+
 ## Développement
 
 Node.js 22.18+ (LTS recommandé), npm et Git.
@@ -79,7 +88,7 @@ Importer le dépôt, choisir Vite, commande npm run build, sortie dist. Vérifie
 
 ## Historique et état des validations
 
-Consulter [CHANGELOG.md](CHANGELOG.md) pour les changements, les preuves de validation et les points restant à traiter. Le premier contrôle GitHub Actions du 25 novembre 2026 a réussi sur le commit `08a0fb3` ([rapport](https://github.com/iBob78/moncentieme/actions/runs/45576478244)). Les résultats des commits ultérieurs sont à vérifier dans Actions.
+Consulter [CHANGELOG.md](CHANGELOG.md) pour les changements, les preuves de validation et les points restant à traiter. Le premier contrôle GitHub Actions du 25 novembre 2026 a réussi sur le commit `08a0fb3` ([rapport](https://github.com/iBob78/moncentieme/actions/runs/45576478244)). La version fonctionnelle `2e7675f` a également réussi tous les contrôles ([rapport CI](https://github.com/iBob78/moncentieme/actions/runs/45582479366)) et son aperçu Vercel a été accepté par le propriétaire le 25 novembre 2026 pour le cumul par activité. Les commits suivants doivent être vérifiés dans Actions.
 
 ## Contribution
 
