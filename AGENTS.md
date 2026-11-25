@@ -27,5 +27,8 @@ Application française, gratuite, statique : heures décimales, pointage et chro
 3. Vérifier les cinq onglets, conservation des saisies, pauses, minuit, copies et chronomètre en navigation.
 4. Actualiser README et le manifeste statique de l'export ZIP à chaque ajout, renommage ou suppression de fichier ; conserver les imports ?raw explicites. Ne jamais annoncer un test réussi sans l'avoir exécuté.
 
+## Intégration continue
+Le workflow .github/workflows/ci.yml exécute npm ci, npm test, npm run typecheck et npm run build sous Node 22. Vérifier les résultats dans la pull request ; ne pas contourner ni désactiver les contrôles pour masquer un échec. La CI ne remplace pas les tests visuels. Garder les permissions minimales (contents: read), sans secret ni déploiement dans ce workflow.
+
 ## Git
 Branche dédiée, commits explicites et pull request vers main. Ne pas fusionner ni déployer sans accord. Indiquer les tests réellement effectués et les limites. Aucun secret ou donnée personnelle dans Git.

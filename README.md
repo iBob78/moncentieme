@@ -43,6 +43,12 @@ Ouvrir l'adresse indiquée par Vite.
 | npm run build | Production vers dist/ |
 | npm run preview | Prévisualisation du build |
 
+## Intégration continue (GitHub Actions)
+
+Le workflow [Qualité du code](.github/workflows/ci.yml) s'exécute sur chaque pull request vers main, sur chaque push vers main et, une fois disponible sur la branche par défaut, manuellement depuis l'onglet Actions. Il utilise Node.js 22, npm ci avec le lockfile, npm test, npm run typecheck, npm run build et vérifie la présence de dist/index.html. Les étapes s'arrêtent en cas d'échec ; les exécutions devenues obsolètes sont annulées.
+
+Consulter les résultats dans [Actions](https://github.com/iBob78/moncentieme/actions) ou dans les vérifications de la pull request. Ne fusionner qu'après réussite de la CI et vérification manuelle des changements d'interface. Ce workflow ne déploie pas le site et ne rend pas les vérifications obligatoires à lui seul : la protection de main doit être configurée séparément.
+
 ## Architecture
 
     index.html                   Métadonnées et entrée HTML
@@ -58,6 +64,7 @@ Ouvrir l'adresse indiquée par Vite.
     vite.config.ts               React/Tailwind/HTML monofichier
     vercel.json                  Hébergement
     AGENTS.md                    Instructions de contribution
+    .github/workflows/ci.yml     Tests, TypeScript et build automatiques
 
 Modules historiques conservés, non exposés dans la navigation actuelle : ConversionTable, EquivalenceVisualizer, OptionBCentesimalOnly, TimeTravelController, DownloadZipModal et VercelDeployModal. Le générateur ZIP utilise un manifeste statique de fichiers source (y compris documentation, lockfile, tests et robots.txt) ; maintenir cette liste à chaque ajout ou suppression de fichier. Le générateur est conservé ; le téléchargement du dépôt GitHub reste la méthode de référence.
 

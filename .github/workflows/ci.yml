@@ -1,0 +1,41 @@
+name: Qualité du code
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Tests, TypeScript et build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Installer les dépendances verrouillées
+        run: npm ci
+      - name: Tests automatisés
+        run: npm test
+      - name: Vérifier TypeScript
+        run: npm run typecheck
+      - name: Compiler pour la production
+        run: npm run build
+      - name: Vérifier la sortie
+        run: test -s dist/index.html
